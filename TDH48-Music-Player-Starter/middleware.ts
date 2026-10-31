@@ -14,7 +14,9 @@ export async function middleware(request: NextRequest) {
 
   if (!supabaseUrl || !supabaseKey) {
     console.error("Missing Supabase environment variables");
-    return NextResponse.redirect(new URL("/admin/login?error=config", request.url));
+    return NextResponse.redirect(
+      new URL("/admin/login?error=config", request.url)
+    );
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -22,7 +24,14 @@ export async function middleware(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+
+      setAll(
+        cookiesToSet: {
+          name: string;
+          value: string;
+          options: any;
+        }[]
+      ) {
         cookiesToSet.forEach(({ name, value }) => {
           request.cookies.set(name, value);
         });
@@ -38,7 +47,6 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // ตรวจสอบ Session กับ Supabase
   const {
     data: { user },
     error: userError,
@@ -46,12 +54,15 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // ไม่ต้องตรวจสิทธิ์สำหรับหน้า Login
-  if (pathname === "/admin/login" || pathname.startsWith("/admin/login/")) {
+  // อนุญาตให้เข้าหน้า Login โดยไม่ต้องตรวจสิทธิ์
+  if (
+    pathname === "/admin/login" ||
+    pathname.startsWith("/admin/login/")
+  ) {
     return response;
   }
 
-  // ป้องกันหน้า Admin หากยังไม่ได้เข้าสู่ระบบ
+  // ตรวจสอบหน้าสำหรับ Admin
   if (pathname.startsWith("/admin")) {
     if (userError || !user) {
       const url = request.nextUrl.clone();
@@ -61,16 +72,17 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // ตรวจสอบสิทธิ์ Admin จากตาราง profiles
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("is_admin")
       .eq("id", user.id)
       .maybeSingle();
 
-    // หากอ่านข้อมูลไม่ได้หรือไม่พบโปรไฟล์ ให้ปฏิเสธการเข้าถึง
     if (profileError || !profile || profile.is_admin !== true) {
-      console.error("Admin profile check failed:", profileError?.message);
+      console.error(
+        "Admin profile check failed:",
+        profileError?.message
+      );
 
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
