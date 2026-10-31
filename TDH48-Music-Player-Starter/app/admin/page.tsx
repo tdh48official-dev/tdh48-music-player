@@ -93,6 +93,68 @@ export default function Admin() {
     });
   }
 
+  // อ่านความยาวจาก metadata ของไฟล์เสียงที่มีอยู่ แล้วบันทึกลงฐานข้อมูล
+  function getAudioDuration(url: string): Promise<number | null> {
+    return new Promise((resolve) => {
+      const audioElement = document.createElement('audio');
+      let settled = false;
+      const finish = (value: number | null) => {
+        if (settled) return;
+        settled = true;
+        audioElement.removeAttribute('src');
+        audioElement.load();
+        resolve(value);
+      };
+      const timeout = window.setTimeout(() => finish(null), 20000);
+      audioElement.preload = 'metadata';
+      audioElement.onloadedmetadata = () => {
+        window.clearTimeout(timeout);
+        finish(Number.isFinite(audioElement.duration) ? Math.round(audioElement.duration) : null);
+      };
+      audioElement.onerror = () => {
+        window.clearTimeout(timeout);
+        finish(null);
+      };
+      audioElement.src = url;
+    });
+  }
+
+  async function fillMissingDurations() {
+    if (!supabase || busy) return;
+    const missing = tracks.filter((track) => track.duration_seconds == null && track.audio_url);
+    if (missing.length === 0) {
+      setMsg('ทุกเพลงมีข้อมูลความยาวแล้ว');
+      return;
+    }
+
+    setBusy(true);
+    let saved = 0;
+    let failed = 0;
+    for (let index = 0; index < missing.length; index++) {
+      const track = missing[index];
+      setMsg(`กำลังตรวจจับความยาวเพลง ${index + 1}/${missing.length}: ${track.title}`);
+      const duration = await getAudioDuration(track.audio_url);
+      if (duration == null) {
+        failed++;
+        continue;
+      }
+      const { error } = await supabase
+        .from('tracks')
+        .update({ duration_seconds: duration })
+        .eq('id', track.id);
+      if (error) {
+        failed++;
+      } else {
+        saved++;
+        setTracks((current) => current.map((item) =>
+          item.id === track.id ? { ...item, duration_seconds: duration } : item
+        ));
+      }
+    }
+    setMsg(`บันทึกความยาวสำเร็จ ${saved} เพลง${failed ? ` · ตรวจไม่สำเร็จ ${failed} เพลง` : ''}`);
+    setBusy(false);
+  }
+
   // เพิ่มเพลงใหม่
   async function add(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -499,9 +561,21 @@ export default function Admin() {
                 เพลงทั้งหมด
               </h2>
 
-              <span className="rounded-full bg-fuchsia-200/10 px-3 py-1 text-xs text-fuchsia-100">
-                {tracks.length} เพลง
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-fuchsia-200/10 px-3 py-1 text-xs text-fuchsia-100">
+                  {tracks.length} เพลง
+                </span>
+                {tracks.some((track) => track.duration_seconds == null) && (
+                  <button
+                    type="button"
+                    onClick={fillMissingDurations}
+                    disabled={busy}
+                    className="rounded-xl border border-fuchsia-200/30 px-3 py-2 text-xs text-fuchsia-100 disabled:opacity-50"
+                  >
+                    {busy ? 'กำลังตรวจจับ...' : 'เติมความยาวเพลงที่ขาด'}
+                  </button>
+                )}
+              </div>
 
             </div>
 
