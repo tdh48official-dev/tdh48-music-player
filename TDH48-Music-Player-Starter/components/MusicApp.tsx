@@ -17,73 +17,6 @@ import {
 import type { Track } from '@/lib/types';
 import { usePlayer } from './PlayerProvider';
 
-type MusicPromoPopupProps = {
-  open: boolean;
-  onClose: () => void;
-  onContinue: () => void;
-};
-
-function MusicPromoPopup({
-  open,
-  onClose,
-  onContinue,
-}: MusicPromoPopupProps) {
-  if (!open) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="music-popup-title"
-        className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center text-gray-900 shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          aria-label="ปิดป๊อปอัป"
-          onClick={onClose}
-          className="absolute right-3 top-3 rounded-full px-3 py-1 text-xl text-gray-500 hover:bg-gray-100"
-        >
-          ×
-        </button>
-
-        <div className="mb-3 text-4xl">🎧</div>
-
-        <h2
-          id="music-popup-title"
-          className="mb-3 text-xl font-bold text-pink-600"
-        >
-          TDH48 Music Player
-        </h2>
-
-        <p className="mb-6 text-gray-600">
-          ขอบคุณที่เข้ามาฟังเพลงกับ TDH48 💖
-        </p>
-
-        <button
-          type="button"
-          onClick={onContinue}
-          className="w-full rounded-xl bg-pink-600 px-4 py-3 font-bold text-white hover:bg-pink-700"
-        >
-          ▶ ฟังเพลงเลย
-        </button>
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-600 hover:bg-gray-50"
-        >
-          ไว้ทีหลัง
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function MusicApp({
   initialTracks,
 }: {
@@ -93,12 +26,6 @@ export default function MusicApp({
   const [category, setCategory] = useState('ทั้งหมด');
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [promoOpen, setPromoOpen] = useState(false);
-
-  const [pendingPlay, setPendingPlay] = useState<{
-    item: Track;
-    list: Track[];
-  } | null>(null);
 
   const { play, track, playing, setQueue } = usePlayer();
 
@@ -129,7 +56,7 @@ export default function MusicApp({
     });
   }, [initialTracks, q, category]);
 
-  // ดึงเฉพาะเพลงที่แอดมินติ๊กให้เป็นเพลงแนะนำ
+  // เพลงที่แอดมินเลือกให้เป็นเพลงแนะนำ
   const featuredTracks = useMemo(
     () => initialTracks.filter((t) => t.is_featured),
     [initialTracks]
@@ -145,7 +72,9 @@ export default function MusicApp({
     }
 
     const timer = window.setInterval(() => {
-      setFeaturedIndex((current) => (current + 1) % featuredTracks.length);
+      setFeaturedIndex(
+        (current) => (current + 1) % featuredTracks.length
+      );
     }, 5000);
 
     return () => window.clearInterval(timer);
@@ -163,7 +92,9 @@ export default function MusicApp({
   const nextFeatured = () => {
     if (featuredTracks.length <= 1) return;
 
-    setFeaturedIndex((current) => (current + 1) % featuredTracks.length);
+    setFeaturedIndex(
+      (current) => (current + 1) % featuredTracks.length
+    );
   };
 
   const previousFeatured = () => {
@@ -171,7 +102,8 @@ export default function MusicApp({
 
     setFeaturedIndex(
       (current) =>
-        (current - 1 + featuredTracks.length) % featuredTracks.length
+        (current - 1 + featuredTracks.length) %
+        featuredTracks.length
     );
   };
 
@@ -193,27 +125,10 @@ export default function MusicApp({
     setSelectedTrack(item);
   };
 
-  // แสดงป๊อปอัปก่อนเล่นเพลงทุกครั้ง
+  // เล่นเพลงได้ทันทีโดยไม่ต้องเปิดป็อปอัพ
   const playTrack = (item: Track, list = initialTracks) => {
-    setPendingPlay({ item, list });
-    setPromoOpen(true);
-  };
-
-  // ปิดป๊อปอัปโดยไม่เล่นเพลง
-  const closePromo = () => {
-    setPromoOpen(false);
-    setPendingPlay(null);
-  };
-
-  // กด "ฟังเพลงเลย" แล้วจึงเริ่มเล่นเพลงที่เลือกไว้
-  const continuePlaying = () => {
-    if (pendingPlay) {
-      setQueue(pendingPlay.list);
-      play(pendingPlay.item);
-    }
-
-    setPromoOpen(false);
-    setPendingPlay(null);
+    setQueue(list);
+    play(item);
   };
 
   const formatDate = (date: string | null) => {
@@ -299,7 +214,10 @@ export default function MusicApp({
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#6b354f] to-[#20121c] p-5 md:p-10">
               <div className="relative z-10 flex flex-col items-center gap-7 md:flex-row md:items-end">
                 <img
-                  src={selectedTrack.cover_url || '/cover-placeholder.svg'}
+                  src={
+                    selectedTrack.cover_url ||
+                    '/cover-placeholder.svg'
+                  }
                   alt={selectedTrack.title}
                   className="aspect-square w-56 rounded-xl object-cover shadow-2xl md:w-72"
                 />
@@ -344,7 +262,10 @@ export default function MusicApp({
               </button>
 
               <div>
-                <div className="text-sm font-bold">รายการเพลง</div>
+                <div className="text-sm font-bold">
+                  รายการเพลง
+                </div>
+
                 <div className="text-xs text-pink-200/40">
                   TDH48 Music Library
                 </div>
@@ -370,13 +291,17 @@ export default function MusicApp({
                   }`}
                 >
                   <span className="text-sm text-pink-300">
-                    {track?.id === item.id && playing ? '♫' : index + 1}
+                    {track?.id === item.id && playing
+                      ? '♫'
+                      : index + 1}
                   </span>
 
                   <span className="min-w-0">
                     <span
                       className={`block truncate text-sm font-semibold ${
-                        track?.id === item.id ? 'text-pink-300' : 'text-white'
+                        track?.id === item.id
+                          ? 'text-pink-300'
+                          : 'text-white'
                       }`}
                     >
                       {item.title}
@@ -389,7 +314,9 @@ export default function MusicApp({
 
                   <span className="text-right text-xs text-white/40">
                     {item.duration_seconds
-                      ? `${Math.floor(item.duration_seconds / 60)}:${String(
+                      ? `${Math.floor(
+                          item.duration_seconds / 60
+                        )}:${String(
                           item.duration_seconds % 60
                         ).padStart(2, '0')}`
                       : '--:--'}
@@ -406,7 +333,10 @@ export default function MusicApp({
                 <div className="absolute inset-0">
                   <img
                     key={`background-${featured.id}`}
-                    src={featured.cover_url || '/cover-placeholder.svg'}
+                    src={
+                      featured.cover_url ||
+                      '/cover-placeholder.svg'
+                    }
                     alt=""
                     className="h-full w-full object-cover opacity-20 blur-2xl"
                   />
@@ -417,7 +347,10 @@ export default function MusicApp({
                 <div className="relative flex min-h-[360px] flex-col items-center gap-7 p-6 md:min-h-[390px] md:flex-row md:p-12">
                   <img
                     key={featured.id}
-                    src={featured.cover_url || '/cover-placeholder.svg'}
+                    src={
+                      featured.cover_url ||
+                      '/cover-placeholder.svg'
+                    }
                     alt={featured.title}
                     className="aspect-square w-52 rounded-2xl object-cover shadow-2xl md:w-72"
                   />
@@ -428,7 +361,9 @@ export default function MusicApp({
                       TDH48 FEATURED MUSIC
                     </div>
 
-                    <div className="text-sm text-white/60">เพลงแนะนำ</div>
+                    <div className="text-sm text-white/60">
+                      เพลงแนะนำ
+                    </div>
 
                     <h1 className="mt-2 break-words text-3xl font-black md:text-6xl">
                       {featured.title}
@@ -557,7 +492,9 @@ export default function MusicApp({
                     className="mx-auto mb-4 text-pink-300/50"
                   />
 
-                  <h3 className="font-bold">ยังไม่มีเพลงในหมวดนี้</h3>
+                  <h3 className="font-bold">
+                    ยังไม่มีเพลงในหมวดนี้
+                  </h3>
 
                   <p className="mt-2 text-sm text-white/40">
                     ลองเลือกหมวดอื่นหรือค้นหาเพลงใหม่
@@ -576,7 +513,10 @@ export default function MusicApp({
                       >
                         <div className="relative aspect-square overflow-hidden rounded-xl bg-white/10">
                           <img
-                            src={item.cover_url || '/cover-placeholder.svg'}
+                            src={
+                              item.cover_url ||
+                              '/cover-placeholder.svg'
+                            }
                             alt={item.title}
                             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                           />
@@ -616,13 +556,6 @@ export default function MusicApp({
           </>
         )}
       </div>
-
-      {/* Popup */}
-      <MusicPromoPopup
-        open={promoOpen}
-        onClose={closePromo}
-        onContinue={continuePlaying}
-      />
 
       <footer className="mx-auto mt-16 max-w-[1600px] px-5 text-center text-xs text-pink-200/30">
         © {new Date().getFullYear()} TDH48 MUSIC · Made for the fans
