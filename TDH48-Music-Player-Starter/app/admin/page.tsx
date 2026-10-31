@@ -2,7 +2,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-
 import type { FormEvent } from 'react';
 import type { Track } from '@/lib/types';
 
@@ -16,6 +15,7 @@ import {
   Plus,
   ExternalLink,
   Pencil,
+  Star,
 } from 'lucide-react';
 
 export default function Admin() {
@@ -183,20 +183,65 @@ export default function Admin() {
     const nextAlbum = prompt('ชื่ออัลบั้ม', t.album || '');
     if (nextAlbum === null) return;
 
-    const { error } = await supabase
-      .from('tracks')
-      .update({
-        title: nextTitle,
-        artist: nextArtist,
-        album: nextAlbum || null,
-      })
-      .eq('id', t.id);
+    setBusy(true);
 
-    if (error) {
-      setMsg(error.message);
-    } else {
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .update({
+          title: nextTitle,
+          artist: nextArtist,
+          album: nextAlbum || null,
+        })
+        .eq('id', t.id);
+
+      if (error) throw error;
+
       setMsg('แก้ไขข้อมูลเพลงเรียบร้อยแล้ว');
       await load();
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : 'แก้ไขเพลงไม่สำเร็จ');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // เปิดหรือปิดสถานะเพลงแนะนำ
+  async function toggleFeatured(t: Track, checked: boolean) {
+    if (!supabase || busy) return;
+
+    setBusy(true);
+    setMsg('กำลังบันทึกสถานะเพลงแนะนำ...');
+
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .update({ is_featured: checked })
+        .eq('id', t.id);
+
+      if (error) throw error;
+
+      setTracks((current) =>
+        current.map((item) =>
+          item.id === t.id
+            ? { ...item, is_featured: checked }
+            : item
+        )
+      );
+
+      setMsg(
+        checked
+          ? `เพิ่ม “${t.title}” ในเพลงแนะนำแล้ว`
+          : `นำ “${t.title}” ออกจากเพลงแนะนำแล้ว`
+      );
+    } catch (error) {
+      setMsg(
+        error instanceof Error
+          ? error.message
+          : 'เปลี่ยนสถานะเพลงแนะนำไม่สำเร็จ'
+      );
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -208,16 +253,22 @@ export default function Admin() {
 
     if (!confirmed) return;
 
-    const { error } = await supabase
-      .from('tracks')
-      .delete()
-      .eq('id', t.id);
+    setBusy(true);
 
-    if (error) {
-      setMsg(error.message);
-    } else {
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .delete()
+        .eq('id', t.id);
+
+      if (error) throw error;
+
       setMsg('ลบเพลงเรียบร้อยแล้ว');
       await load();
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : 'ลบเพลงไม่สำเร็จ');
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -234,6 +285,8 @@ export default function Admin() {
 
     window.location.href = '/admin/login';
   }
+
+  const featuredCount = tracks.filter((t) => t.is_featured).length;
 
   return (
     <main className="min-h-screen pb-16">
@@ -292,6 +345,11 @@ export default function Admin() {
         <p className="mt-2 text-sm text-white/50">
           เพิ่มเพลงใหม่ แก้ไขข้อมูล และดูแลเพลงของ TDH48
         </p>
+
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-fuchsia-200/20 bg-fuchsia-200/10 px-4 py-2 text-sm text-fuchsia-100">
+          <Star size={15} />
+          เพลงแนะนำอยู่ {featuredCount} เพลง
+        </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-[1fr_1.2fr]">
 
@@ -473,18 +531,35 @@ export default function Admin() {
 
                     </div>
 
+                    {/* Checkbox เพลงแนะนำ */}
+                    <label
+                      title="ตั้งหรือยกเลิกเพลงแนะนำ"
+                      className="flex shrink-0 cursor-pointer flex-col items-center gap-1 text-[10px] text-fuchsia-200"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Boolean(t.is_featured)}
+                        disabled={busy}
+                        onChange={(e) => toggleFeatured(t, e.target.checked)}
+                        className="h-4 w-4 accent-fuchsia-300"
+                      />
+                      แนะนำ
+                    </label>
+
                     <button
                       onClick={() => edit(t)}
+                      disabled={busy}
                       title="แก้ไขเพลง"
-                      className="rounded-lg p-2 text-fuchsia-200 hover:bg-white/10"
+                      className="rounded-lg p-2 text-fuchsia-200 hover:bg-white/10 disabled:opacity-40"
                     >
                       <Pencil size={17} />
                     </button>
 
                     <button
                       onClick={() => remove(t)}
+                      disabled={busy}
                       title="ลบเพลง"
-                      className="rounded-lg p-2 text-rose-300 hover:bg-rose-400/10"
+                      className="rounded-lg p-2 text-rose-300 hover:bg-rose-400/10 disabled:opacity-40"
                     >
                       <Trash2 size={17} />
                     </button>
@@ -495,6 +570,12 @@ export default function Admin() {
 
               </div>
 
+            )}
+
+            {msg && (
+              <p className="mt-4 break-words text-sm text-fuchsia-200">
+                {msg}
+              </p>
             )}
 
           </section>
