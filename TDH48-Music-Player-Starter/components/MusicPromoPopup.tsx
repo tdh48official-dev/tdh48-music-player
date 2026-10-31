@@ -2,142 +2,83 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Play, Music2, Headphones } from 'lucide-react';
 
 type MusicPromoPopupProps = {
   onPlay: () => void;
 };
 
-export default function MusicPromoPopup({
-  onPlay,
-}: MusicPromoPopupProps) {
+export default function MusicPromoPopup({ onPlay }: MusicPromoPopupProps) {
   const [open, setOpen] = useState(false);
 
-  function handlePlay() {
+  function handlePlayClick() {
     setOpen(true);
   }
 
-  function continuePlaying() {
+  function handleContinue() {
     setOpen(false);
     onPlay();
   }
 
   return (
     <>
-      {/* ปุ่มเปิด Pop-up ใช้แทนปุ่ม Play เดิม */}
       <button
         type="button"
-        onClick={handlePlay}
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-fuchsia-300 px-5 py-3 font-bold text-purple-950 transition active:scale-95"
+        onClick={handlePlayClick}
+        className="rounded-lg bg-pink-600 px-4 py-2 font-semibold text-white hover:bg-pink-700"
       >
-        <Play size={18} fill="currentColor" />
-        เล่นเพลง
+        ▶ Play
       </button>
 
       {open && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
           onClick={() => setOpen(false)}
         >
-          <section
+          <div
             role="dialog"
             aria-modal="true"
-            aria-labelledby="tdh48-popup-title"
-            className="relative my-auto w-full max-w-sm overflow-hidden rounded-[30px] bg-[#ff91ce] p-5 text-[#182b2b] shadow-2xl"
+            aria-labelledby="music-popup-title"
+            className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
+              aria-label="ปิดป๊อปอัป"
               onClick={() => setOpen(false)}
-              aria-label="ปิดหน้าต่าง"
-              className="absolute right-3 top-3 z-10 rounded-full bg-black/10 p-2"
+              className="absolute right-3 top-3 rounded-full px-3 py-1 text-xl text-gray-500 hover:bg-gray-100"
             >
-              <X size={22} />
+              ×
             </button>
 
-            <header className="pt-3 text-center">
-              <p className="text-xs font-black tracking-[0.3em]">
-                TDH48 PRESENTS
-              </p>
+            <div className="mb-3 text-4xl">🎧</div>
 
-              <h2
-                id="tdh48-popup-title"
-                className="mt-3 text-4xl font-black leading-none"
-              >
-                MUSIC
-                <br />
-                YOU LOVE
-              </h2>
+            <h2
+              id="music-popup-title"
+              className="mb-3 text-xl font-bold text-pink-600"
+            >
+              TDH48 Music Player
+            </h2>
 
-              <p className="mt-3 text-sm">
-                ค้นพบเพลงโปรดของคุณไปกับ TDH48
-              </p>
-            </header>
+            <p className="mb-6 text-gray-600">
+              ขอบคุณที่เข้ามาฟังเพลงกับ TDH48 💖
+            </p>
 
-            {/* ภาพโปรโมตจำลอง สร้างด้วย CSS ไม่ต้องใช้ไฟล์ภาพ */}
-            <div className="mx-auto my-6 w-52 -rotate-3 rounded-[28px] border-[7px] border-[#173a38] bg-[#092523] p-3 shadow-xl">
-              <div className="rounded-2xl bg-gradient-to-br from-[#28514b] to-[#071615] px-3 py-7 text-center text-white">
-                <div className="mx-auto grid h-16 w-16 place-items-center rounded-full border border-pink-300/60 bg-pink-300/10">
-                  <Headphones
-                    size={34}
-                    className="text-pink-300"
-                  />
-                </div>
+            <button
+              type="button"
+              onClick={handleContinue}
+              className="w-full rounded-xl bg-pink-600 px-4 py-3 font-bold text-white hover:bg-pink-700"
+            >
+              ▶ ฟังเพลงเลย
+            </button>
 
-                <p className="mt-5 text-xs tracking-[0.3em] text-pink-300">
-                  YOUR SOUND
-                </p>
-
-                <h3 className="mt-2 text-3xl font-black">
-                  TDH48
-                </h3>
-
-                <div className="mt-5 flex h-8 items-center justify-center gap-1">
-                  {Array.from({ length: 13 }, (_, i) => (
-                    <span
-                      key={i}
-                      className="w-1 rounded-full bg-pink-300"
-                      style={{
-                        height: `${10 + ((i * 17) % 22)}px`,
-                      }}
-                    />
-                  ))}
-                </div>
-
-                <div className="mt-5 flex items-center justify-center gap-2 text-xs text-white/70">
-                  <Music2 size={14} />
-                  MUSIC FOR EVERY MOMENT
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <h3 className="text-xl font-black">
-                READY TO LISTEN?
-              </h3>
-
-              <p className="mt-2 text-sm">
-                เพลงที่คุณชอบ รอให้คุณค้นพบ
-              </p>
-
-              <button
-                type="button"
-                onClick={continuePlaying}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#173a38] px-4 py-4 font-bold text-white shadow-lg transition active:scale-95"
-              >
-                <Play size={19} fill="currentColor" />
-                ฟังเพลงเลย
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="mt-3 px-4 py-2 text-sm text-black/60"
-              >
-                ไว้ทีหลัง
-              </button>
-            </div>
-          </section>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="mt-3 w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-600 hover:bg-gray-50"
+            >
+              ไว้ทีหลัง
+            </button>
+          </div>
         </div>
       )}
     </>
