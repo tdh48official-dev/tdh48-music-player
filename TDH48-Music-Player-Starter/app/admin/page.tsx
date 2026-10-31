@@ -6,6 +6,7 @@ import type { FormEvent } from 'react';
 import type { Track } from '@/lib/types';
 
 import { createClient } from '@/lib/supabase/client';
+import OfficialPlaylistsAdmin from '@/components/OfficialPlaylistsAdmin';
 
 import {
   Upload,
@@ -582,6 +583,7 @@ export default function Admin() {
 
         </div>
 
+        <OfficialPlaylistsAdmin />
       </div>
     </main>
   );
