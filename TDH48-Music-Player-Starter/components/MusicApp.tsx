@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Disc3,
   Headphones,
   Play,
@@ -23,6 +25,7 @@ export default function MusicApp({
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('ทั้งหมด');
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
 
   const { play, track, playing, setQueue } = usePlayer();
 
@@ -53,8 +56,50 @@ export default function MusicApp({
     });
   }, [initialTracks, q, category]);
 
-  const featured =
-    initialTracks.find((t) => t.is_featured) || initialTracks[0];
+  // ดึงเฉพาะเพลงที่แอดมินติ๊กให้เป็นเพลงแนะนำ
+  const featuredTracks = useMemo(
+    () => initialTracks.filter((t) => t.is_featured),
+    [initialTracks]
+  );
+
+  const featured = featuredTracks[featuredIndex] || null;
+
+  // เปลี่ยนสไลด์อัตโนมัติทุก 5 วินาที
+  useEffect(() => {
+    if (featuredTracks.length <= 1) {
+      setFeaturedIndex(0);
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setFeaturedIndex((current) => (current + 1) % featuredTracks.length);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [featuredTracks.length]);
+
+  // ป้องกัน index เกินเมื่อมีการเพิ่มหรือลบเพลงแนะนำ
+  useEffect(() => {
+    setFeaturedIndex((current) =>
+      featuredTracks.length === 0
+        ? 0
+        : current % featuredTracks.length
+    );
+  }, [featuredTracks.length]);
+
+  const nextFeatured = () => {
+    if (featuredTracks.length <= 1) return;
+
+    setFeaturedIndex((current) => (current + 1) % featuredTracks.length);
+  };
+
+  const previousFeatured = () => {
+    if (featuredTracks.length <= 1) return;
+
+    setFeaturedIndex((current) =>
+      (current - 1 + featuredTracks.length) % featuredTracks.length
+    );
+  };
 
   const detailTracks = useMemo(() => {
     if (!selectedTrack) return [];
@@ -96,7 +141,6 @@ export default function MusicApp({
       <header className="sticky top-0 z-20 border-b border-pink-400/10 bg-[#090909]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-4 md:px-7">
 
-          {/* โลโก้ TDH48 */}
           <a href="/" className="flex items-center gap-3">
             <img
               src="/tdh48-logo.png"
@@ -261,11 +305,13 @@ export default function MusicApp({
           </section>
         ) : (
           <>
-            {/* Featured Song */}
+            {/* Featured Music Slider */}
             {featured && (
               <section className="relative mb-10 overflow-hidden rounded-3xl bg-gradient-to-br from-[#51263e] to-[#161016]">
+
                 <div className="absolute inset-0">
                   <img
+                    key={`background-${featured.id}`}
                     src={featured.cover_url || '/cover-placeholder.svg'}
                     alt=""
                     className="h-full w-full object-cover opacity-20 blur-2xl"
@@ -274,14 +320,16 @@ export default function MusicApp({
                   <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/20" />
                 </div>
 
-                <div className="relative flex flex-col items-center gap-7 p-6 md:flex-row md:p-12">
+                <div className="relative flex min-h-[360px] flex-col items-center gap-7 p-6 md:min-h-[390px] md:flex-row md:p-12">
+
                   <img
+                    key={featured.id}
                     src={featured.cover_url || '/cover-placeholder.svg'}
                     alt={featured.title}
                     className="aspect-square w-52 rounded-2xl object-cover shadow-2xl md:w-72"
                   />
 
-                  <div className="flex-1 text-center md:text-left">
+                  <div className="min-w-0 flex-1 text-center md:text-left">
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-pink-300/20 bg-pink-400/10 px-3 py-1 text-xs text-pink-200">
                       <Headphones size={14} />
                       TDH48 FEATURED MUSIC
@@ -321,6 +369,48 @@ export default function MusicApp({
                       </button>
                     </div>
                   </div>
+
+                  {/* ปุ่มเลื่อนสไลด์ */}
+                  {featuredTracks.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={previousFeatured}
+                        aria-label="เพลงแนะนำก่อนหน้า"
+                        className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur transition hover:bg-pink-400 hover:text-black md:left-5"
+                      >
+                        <ChevronLeft size={22} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={nextFeatured}
+                        aria-label="เพลงแนะนำถัดไป"
+                        className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur transition hover:bg-pink-400 hover:text-black md:right-5"
+                      >
+                        <ChevronRight size={22} />
+                      </button>
+                    </>
+                  )}
+
+                  {/* จุดแสดงตำแหน่งสไลด์ */}
+                  {featuredTracks.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2">
+                      {featuredTracks.map((item, index) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setFeaturedIndex(index)}
+                          aria-label={`ไปเพลงแนะนำลำดับที่ ${index + 1}`}
+                          className={`h-2 rounded-full transition-all ${
+                            index === featuredIndex
+                              ? 'w-7 bg-pink-300'
+                              : 'w-2 bg-white/40 hover:bg-white/70'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </section>
             )}
