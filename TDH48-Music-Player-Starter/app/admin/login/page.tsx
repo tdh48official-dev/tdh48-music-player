@@ -3,8 +3,13 @@
 
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+
 import { createClient } from '@/lib/supabase/client';
-import { Music2, LockKeyhole } from 'lucide-react';
+
+import {
+  Music2,
+  LockKeyhole,
+} from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -23,7 +28,9 @@ export default function Login() {
     } else if (urlError === 'unauthorized') {
       setError('กรุณาเข้าสู่ระบบก่อนเข้า Dashboard');
     } else if (urlError === 'config') {
-      setError('ระบบยังไม่ได้ตั้งค่า Supabase Environment Variables');
+      setError(
+        'ระบบยังไม่ได้ตั้งค่า Supabase Environment Variables กรุณาตรวจสอบการตั้งค่าใน Vercel'
+      );
     }
   }, []);
 
@@ -46,7 +53,9 @@ export default function Login() {
 
       if (loginError) {
         console.error('Login error:', loginError);
-        setError('เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบอีเมลและรหัสผ่าน');
+        setError(
+          'เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบอีเมลและรหัสผ่าน'
+        );
         return;
       }
 
@@ -55,19 +64,27 @@ export default function Login() {
         return;
       }
 
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
+      const {
+        data: sessionData,
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError || !sessionData.session) {
         console.error('Session error:', sessionError);
-        setError('เข้าสู่ระบบสำเร็จ แต่ไม่พบ Session กรุณาลองใหม่');
+        setError(
+          'เข้าสู่ระบบสำเร็จ แต่ไม่พบ Session กรุณาลองใหม่'
+        );
         return;
       }
 
+      // ให้ Browser ส่ง Cookie ของ Session ไปกับคำขอหน้า Admin
       window.location.replace('/admin');
     } catch (err) {
       console.error('Login exception:', err);
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+
+      setError(
+        'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาตรวจสอบ Supabase และลองใหม่อีกครั้ง'
+      );
     } finally {
       setBusy(false);
     }
@@ -75,10 +92,12 @@ export default function Login() {
 
   return (
     <main className="grid min-h-screen place-items-center px-5">
+
       <form
         onSubmit={submit}
         className="glass w-full max-w-md rounded-3xl p-8"
       >
+
         <div className="mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-fuchsia-200 text-purple-950">
           <Music2 />
         </div>
@@ -95,7 +114,10 @@ export default function Login() {
           เข้าสู่ระบบสำหรับทีมผู้ดูแลคลังเพลง
         </p>
 
-        <label className="mt-7 block text-sm">อีเมล</label>
+        <label className="mt-7 block text-sm">
+          อีเมล
+        </label>
+
         <input
           type="email"
           required
@@ -106,7 +128,10 @@ export default function Login() {
           placeholder="admin@example.com"
         />
 
-        <label className="mt-4 block text-sm">รหัสผ่าน</label>
+        <label className="mt-4 block text-sm">
+          รหัสผ่าน
+        </label>
+
         <input
           type="password"
           required
@@ -118,7 +143,7 @@ export default function Login() {
         />
 
         {error && (
-          <p className="mt-3 text-sm text-rose-300">
+          <p className="mt-3 break-words text-sm text-rose-300">
             {error}
           </p>
         )}
@@ -129,7 +154,10 @@ export default function Login() {
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-fuchsia-200 py-3 font-bold text-purple-950 disabled:opacity-50"
         >
           <LockKeyhole size={17} />
-          {busy ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบแอดมิน'}
+
+          {busy
+            ? 'กำลังเข้าสู่ระบบ...'
+            : 'เข้าสู่ระบบแอดมิน'}
         </button>
 
         <a
@@ -138,7 +166,9 @@ export default function Login() {
         >
           ← กลับหน้าฟังเพลง
         </a>
+
       </form>
+
     </main>
   );
 }
