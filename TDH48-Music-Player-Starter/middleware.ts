@@ -5,8 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // สำคัญ: อนุญาตหน้า Login ก่อนตรวจ Environment Variables
-  // เพื่อป้องกัน Redirect วนกลับมาหน้า Login ซ้ำ
+  // Allow login page without authentication
   if (
     pathname === '/admin/login' ||
     pathname.startsWith('/admin/login/')
@@ -20,7 +19,6 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // ถ้าไม่มี Supabase config ให้ส่งไปหน้า Login
   if (!supabaseUrl || !supabaseKey) {
     console.error('Missing Supabase environment variables');
 
@@ -44,7 +42,13 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
 
-        setAll(cookiesToSet) {
+        setAll(
+          cookiesToSet: {
+            name: string;
+            value: string;
+            options: any;
+          }[]
+        ) {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
@@ -61,7 +65,7 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // ตรวจสอบ Session
+  // Check user session
   const {
     data: { user },
     error: userError,
@@ -76,7 +80,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // ตรวจสอบสิทธิ์ Admin
+  // Check admin profile
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('is_admin')
