@@ -565,16 +565,17 @@ export default function Admin() {
                 <span className="rounded-full bg-fuchsia-200/10 px-3 py-1 text-xs text-fuchsia-100">
                   {tracks.length} เพลง
                 </span>
-                {tracks.some((track) => track.duration_seconds == null) && (
-                  <button
-                    type="button"
-                    onClick={fillMissingDurations}
-                    disabled={busy}
-                    className="rounded-xl border border-fuchsia-200/30 px-3 py-2 text-xs text-fuchsia-100 disabled:opacity-50"
-                  >
-                    {busy ? 'กำลังตรวจจับ...' : 'เติมความยาวเพลงที่ขาด'}
-                  </button>
-                )}
+                <span className="text-xs text-amber-200">
+                  ขาดความยาว {tracks.filter((track) => track.duration_seconds == null).length} เพลง
+                </span>
+                <button
+                  type="button"
+                  onClick={fillMissingDurations}
+                  disabled={busy || loading || !supabase}
+                  className="rounded-xl bg-fuchsia-200 px-4 py-2 text-xs font-bold text-purple-950 disabled:opacity-50"
+                >
+                  {busy ? 'กำลังตรวจจับ...' : 'เติมความยาวเพลงที่ขาด'}
+                </button>
               </div>
 
             </div>
