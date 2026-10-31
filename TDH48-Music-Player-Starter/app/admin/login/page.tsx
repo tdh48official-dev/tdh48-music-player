@@ -3,10 +3,13 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Music2, LockKeyhole } from 'lucide-react';
 
 export default function Login() {
+  const searchParams = useSearchParams();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,52 +23,56 @@ export default function Login() {
     setBusy(true);
     setError('');
 
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
     try {
       const supabase = createClient();
 
-      const loginPromise = supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { data, error: loginError } =
+        await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
 
-      const result = await Promise.race([
-        loginPromise,
-        new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(
-            () => reject(new Error('TIMEOUT')),
-            15000
-          );
-        }),
-      ]);
-
-      if (result.error) {
-        console.error('Login error:', result.error);
-        setError(
-          'เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบอีเมลและรหัสผ่าน'
-        );
+      if (loginError) {
+        console.error('Login error:', loginError);
+        setError('เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบอีเมลและรหัสผ่าน');
         return;
       }
 
-      window.location.href = '/admin';
+      if (!data.user) {
+        setError('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+        return;
+      }
+
+      // ตรวจสอบว่า Session ถูกบันทึกแล้ว
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+      if (sessionError || !sessionData.session) {
+        console.error('Session error:', sessionError);
+        setError('เข้าสู่ระบบสำเร็จ แต่ไม่พบ Session กรุณาลองใหม่');
+        return;
+      }
+
+      // ไปหน้า Dashboard
+      window.location.replace('/admin');
     } catch (err) {
       console.error('Login exception:', err);
-
-      if (err instanceof Error && err.message === 'TIMEOUT') {
-        setError(
-          'การเชื่อมต่อใช้เวลานานเกินไป กรุณาตรวจสอบการเชื่อมต่อ Supabase'
-        );
-      } else {
-        setError(
-          'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง'
-        );
-      }
+      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
     } finally {
-      if (timeoutId) clearTimeout(timeoutId);
       setBusy(false);
     }
   }
+
+  const urlError = searchParams.get('error');
+
+  const urlErrorMessage =
+    urlError === 'not-admin'
+      ? 'บัญชีนี้ไม่มีสิทธิ์เข้าใช้งาน Dashboard หรือระบบอ่านข้อมูลสิทธิ์แอดมินไม่ได้'
+      : urlError === 'unauthorized'
+        ? 'กรุณาเข้าสู่ระบบก่อนเข้า Dashboard'
+        : urlError === 'config'
+          ? 'ระบบยังไม่ได้ตั้งค่า Supabase Environment Variables'
+          : '';
 
   return (
     <main className="grid min-h-screen place-items-center px-5">
@@ -93,6 +100,7 @@ export default function Login() {
         <input
           type="email"
           required
+          autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 outline-none focus:border-fuchsia-200"
@@ -103,15 +111,16 @@ export default function Login() {
         <input
           type="password"
           required
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 outline-none focus:border-fuchsia-200"
           placeholder="••••••••"
         />
 
-        {error && (
+        {(error || urlErrorMessage) && (
           <p className="mt-3 text-sm text-rose-300">
-            {error}
+            {error || urlErrorMessage}
           </p>
         )}
 
