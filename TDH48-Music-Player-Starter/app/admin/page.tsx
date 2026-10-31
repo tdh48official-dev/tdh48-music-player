@@ -75,6 +75,24 @@ export default function Admin() {
     }
   }, [supabase, load]);
 
+  function readAudioDuration(file: File): Promise<number | null> {
+    return new Promise((resolve) => {
+      const audioElement = document.createElement('audio');
+      const objectUrl = URL.createObjectURL(file);
+      audioElement.preload = 'metadata';
+      audioElement.onloadedmetadata = () => {
+        const duration = Number.isFinite(audioElement.duration) ? Math.round(audioElement.duration) : null;
+        URL.revokeObjectURL(objectUrl);
+        resolve(duration);
+      };
+      audioElement.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(null);
+      };
+      audioElement.src = objectUrl;
+    });
+  }
+
   // เพิ่มเพลงใหม่
   async function add(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -90,6 +108,7 @@ export default function Admin() {
     setMsg('กำลังอัปโหลดไฟล์เพลง...');
 
     try {
+      const durationSeconds = await readAudioDuration(audio);
       const audioPath = `${Date.now()}-${audio.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 
       const audioUpload = await supabase.storage
@@ -135,6 +154,7 @@ export default function Admin() {
           album: album || null,
           audio_url: audioUrl,
           cover_url: coverUrl,
+          duration_seconds: durationSeconds,
           is_featured: featured,
           published: true,
         });
@@ -521,7 +541,7 @@ export default function Admin() {
                       </div>
 
                       <div className="text-xs text-white/40">
-                        {t.artist} · {t.category}
+                        {t.artist} · {t.category} · {t.duration_seconds != null ? `${Math.floor(t.duration_seconds / 60)}:${String(t.duration_seconds % 60).padStart(2, '0')}` : '--:--'}
                       </div>
 
                       {t.is_featured && (
