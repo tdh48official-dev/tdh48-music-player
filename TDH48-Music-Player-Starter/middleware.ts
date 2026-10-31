@@ -1,100 +1,105 @@
 
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request,
-  });
+  const pathname = request.nextUrl.pathname;
+
+  // สำคัญ: อนุญาตหน้า Login ก่อนตรวจ Environment Variables
+  // เพื่อป้องกัน Redirect วนกลับมาหน้า Login ซ้ำ
+  if (
+    pathname === '/admin/login' ||
+    pathname.startsWith('/admin/login/')
+  ) {
+    return NextResponse.next();
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // ถ้าไม่มี Supabase config ให้ส่งไปหน้า Login
   if (!supabaseUrl || !supabaseKey) {
-    console.error("Missing Supabase environment variables");
-    return NextResponse.redirect(
-      new URL("/admin/login?error=config", request.url)
-    );
+    console.error('Missing Supabase environment variables');
+
+    const url = request.nextUrl.clone();
+    url.pathname = '/admin/login';
+    url.searchParams.set('error', 'config');
+
+    return NextResponse.redirect(url);
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-
-      setAll(
-        cookiesToSet: {
-          name: string;
-          value: string;
-          options: any;
-        }[]
-      ) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-
-        response = NextResponse.next({
-          request,
-        });
-
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
-      },
-    },
+  let response = NextResponse.next({
+    request,
   });
 
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+
+          response = NextResponse.next({
+            request,
+          });
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  // ตรวจสอบ Session
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
+  if (userError || !user) {
+    const url = request.nextUrl.clone();
 
-  // อนุญาตให้เข้าหน้า Login โดยไม่ต้องตรวจสิทธิ์
-  if (
-    pathname === "/admin/login" ||
-    pathname.startsWith("/admin/login/")
-  ) {
-    return response;
+    url.pathname = '/admin/login';
+    url.searchParams.set('error', 'unauthorized');
+
+    return NextResponse.redirect(url);
   }
 
-  // ตรวจสอบหน้าสำหรับ Admin
-  if (pathname.startsWith("/admin")) {
-    if (userError || !user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
-      url.searchParams.set("error", "unauthorized");
+  // ตรวจสอบสิทธิ์ Admin
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .maybeSingle();
 
-      return NextResponse.redirect(url);
-    }
+  if (profileError || !profile || profile.is_admin !== true) {
+    console.error(
+      'Admin profile check failed:',
+      profileError?.message
+    );
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .maybeSingle();
+    const url = request.nextUrl.clone();
 
-    if (profileError || !profile || profile.is_admin !== true) {
-      console.error(
-        "Admin profile check failed:",
-        profileError?.message
-      );
+    url.pathname = '/admin/login';
+    url.searchParams.set('error', 'not-admin');
 
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
-      url.searchParams.set("error", "not-admin");
-
-      return NextResponse.redirect(url);
-    }
+    return NextResponse.redirect(url);
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ['/admin/:path*'],
 };
