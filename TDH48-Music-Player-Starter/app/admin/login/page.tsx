@@ -1,19 +1,31 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Music2, LockKeyhole } from 'lucide-react';
 
 export default function Login() {
-  const searchParams = useSearchParams();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get('error');
+
+    if (urlError === 'not-admin') {
+      setError(
+        'บัญชีนี้ไม่มีสิทธิ์เข้า Dashboard หรือระบบอ่านข้อมูลสิทธิ์แอดมินไม่ได้'
+      );
+    } else if (urlError === 'unauthorized') {
+      setError('กรุณาเข้าสู่ระบบก่อนเข้า Dashboard');
+    } else if (urlError === 'config') {
+      setError('ระบบยังไม่ได้ตั้งค่า Supabase Environment Variables');
+    }
+  }, []);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -39,11 +51,10 @@ export default function Login() {
       }
 
       if (!data.user) {
-        setError('เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+        setError('ไม่พบข้อมูลผู้ใช้ กรุณาลองใหม่อีกครั้ง');
         return;
       }
 
-      // ตรวจสอบว่า Session ถูกบันทึกแล้ว
       const { data: sessionData, error: sessionError } =
         await supabase.auth.getSession();
 
@@ -53,7 +64,6 @@ export default function Login() {
         return;
       }
 
-      // ไปหน้า Dashboard
       window.location.replace('/admin');
     } catch (err) {
       console.error('Login exception:', err);
@@ -62,17 +72,6 @@ export default function Login() {
       setBusy(false);
     }
   }
-
-  const urlError = searchParams.get('error');
-
-  const urlErrorMessage =
-    urlError === 'not-admin'
-      ? 'บัญชีนี้ไม่มีสิทธิ์เข้าใช้งาน Dashboard หรือระบบอ่านข้อมูลสิทธิ์แอดมินไม่ได้'
-      : urlError === 'unauthorized'
-        ? 'กรุณาเข้าสู่ระบบก่อนเข้า Dashboard'
-        : urlError === 'config'
-          ? 'ระบบยังไม่ได้ตั้งค่า Supabase Environment Variables'
-          : '';
 
   return (
     <main className="grid min-h-screen place-items-center px-5">
@@ -118,9 +117,9 @@ export default function Login() {
           placeholder="••••••••"
         />
 
-        {(error || urlErrorMessage) && (
+        {error && (
           <p className="mt-3 text-sm text-rose-300">
-            {error || urlErrorMessage}
+            {error}
           </p>
         )}
 
