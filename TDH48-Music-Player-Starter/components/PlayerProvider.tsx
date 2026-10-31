@@ -1,12 +1,194 @@
 'use client';
-import {createContext,useContext,useRef,useState} from 'react';
-import type {Track} from '@/lib/types';
-type Ctx={track:Track|null;playing:boolean;play:(t:Track)=>void;toggle:()=>void;audio:React.RefObject<HTMLAudioElement|null>};
-const C=createContext<Ctx|null>(null);
-export function PlayerProvider({children}:{children:React.ReactNode}){
- const [track,setTrack]=useState<Track|null>(null); const [playing,setPlaying]=useState(false); const audio=useRef<HTMLAudioElement>(null);
- const play=(t:Track)=>{setTrack(t);setPlaying(true);setTimeout(()=>{if(audio.current){audio.current.src=t.audio_url;audio.current.play().catch(()=>setPlaying(false));}},0)};
- const toggle=()=>{if(!audio.current)return;if(playing){audio.current.pause();setPlaying(false)}else{audio.current.play().then(()=>setPlaying(true)).catch(()=>setPlaying(false))}};
- return <C.Provider value={{track,playing,play,toggle,audio}}>{children}<audio ref={audio} onEnded={()=>setPlaying(false)} onPause={()=>setPlaying(false)} onPlay={()=>setPlaying(true)}/></C.Provider>
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import type { ReactNode, RefObject } from 'react';
+import type { Track } from '@/lib/types';
+
+type PlayerContextType = {
+  track: Track | null;
+  playing: boolean;
+  queue: Track[];
+  volume: number;
+  currentTime: number;
+  duration: number;
+  audio: RefObject<HTMLAudioElement | null>;
+  play: (track: Track) => void;
+  toggle: () => void;
+  next: () => void;
+  prev: () => void;
+  setQueue: (tracks: Track[]) => void;
+  setVolume: (volume: number) => void;
+  seek: (time: number) => void;
+};
+
+const PlayerContext = createContext<PlayerContextType | null>(null);
+
+export function PlayerProvider({ children }: { children: ReactNode }) {
+  const audio = useRef<HTMLAudioElement>(null);
+
+  const [track, setTrack] = useState<Track | null>(null);
+  const [queue, setQueueState] = useState<Track[]>([]);
+  const [playing, setPlaying] = useState(false);
+  const [volume, setVolumeState] = useState(0.8);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const setQueue = useCallback((tracks: Track[]) => {
+    setQueueState(tracks);
+  }, []);
+
+  const play = useCallback((newTrack: Track) => {
+    if (track?.id === newTrack.id && audio.current) {
+      audio.current.play().catch(() => setPlaying(false));
+      return;
+    }
+
+    setCurrentTime(0);
+    setDuration(0);
+    setTrack(newTrack);
+    setPlaying(true);
+  }, [track]);
+
+  const next = useCallback(() => {
+    if (!queue.length) return;
+
+    const currentIndex = queue.findIndex(
+      (item) => item.id === track?.id
+    );
+
+    const nextIndex =
+      currentIndex < 0 ? 0 : (currentIndex + 1) % queue.length;
+
+    setTrack(queue[nextIndex]);
+    setCurrentTime(0);
+    setPlaying(true);
+  }, [queue, track]);
+
+  const prev = useCallback(() => {
+    if (!audio.current) return;
+
+    if (audio.current.currentTime > 3) {
+      audio.current.currentTime = 0;
+      setCurrentTime(0);
+      return;
+    }
+
+    if (!queue.length) {
+      audio.current.currentTime = 0;
+      return;
+    }
+
+    const currentIndex = queue.findIndex(
+      (item) => item.id === track?.id
+    );
+
+    const prevIndex =
+      currentIndex <= 0 ? queue.length - 1 : currentIndex - 1;
+
+    setTrack(queue[prevIndex]);
+    setCurrentTime(0);
+    setPlaying(true);
+  }, [queue, track]);
+
+  const toggle = useCallback(() => {
+    if (!audio.current || !track) return;
+
+    if (audio.current.paused) {
+      audio.current.play().catch(() => setPlaying(false));
+    } else {
+      audio.current.pause();
+    }
+  }, [track]);
+
+  const setVolume = useCallback((value: number) => {
+    const safeValue = Math.min(1, Math.max(0, value));
+    setVolumeState(safeValue);
+
+    if (audio.current) {
+      audio.current.volume = safeValue;
+    }
+  }, []);
+
+  const seek = useCallback((time: number) => {
+    if (!audio.current) return;
+
+    const safeTime = Math.max(0, Math.min(time, duration || 0));
+    audio.current.currentTime = safeTime;
+    setCurrentTime(safeTime);
+  }, [duration]);
+
+  useEffect(() => {
+    if (!audio.current || !track) return;
+
+    const player = audio.current;
+    player.src = track.audio_url;
+    player.volume = volume;
+    player.load();
+
+    player.play().catch(() => setPlaying(false));
+  }, [track]);
+
+  useEffect(() => {
+    if (audio.current) {
+      audio.current.volume = volume;
+    }
+  }, [volume]);
+
+  return (
+    <PlayerContext.Provider
+      value={{
+        track,
+        playing,
+        queue,
+        volume,
+        currentTime,
+        duration,
+        audio,
+        play,
+        toggle,
+        next,
+        prev,
+        setQueue,
+        setVolume,
+        seek,
+      }}
+    >
+      {children}
+
+      <audio
+        ref={audio}
+        preload="metadata"
+        onTimeUpdate={(e) =>
+          setCurrentTime(e.currentTarget.currentTime)
+        }
+        onLoadedMetadata={(e) =>
+          setDuration(e.currentTarget.duration || 0)
+        }
+        onDurationChange={(e) =>
+          setDuration(e.currentTarget.duration || 0)
+        }
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={next}
+      />
+    </PlayerContext.Provider>
+  );
 }
-export function usePlayer(){const v=useContext(C);if(!v)throw new Error('PlayerProvider missing');return v}
+
+export function usePlayer() {
+  const context = useContext(PlayerContext);
+
+  if (!context) {
+    throw new Error('PlayerProvider missing');
+  }
+
+  return context;
+}
