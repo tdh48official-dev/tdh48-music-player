@@ -1,0 +1,3 @@
+import {PlayerProvider} from '@/components/PlayerProvider';import PlayerBar from '@/components/PlayerBar';import MusicApp from '@/components/MusicApp';import {createClient} from '@/lib/supabase/server';import type {Track} from '@/lib/types';
+export const dynamic='force-dynamic';
+export default async function Home(){let tracks:Track[]=[];try{const supabase=await createClient();const {data}=await supabase.from('tracks').select('*').eq('published',true).order('created_at',{ascending:false});tracks=(data||[]) as Track[]}catch{}return <PlayerProvider><MusicApp initialTracks={tracks}/><PlayerBar/></PlayerProvider>}
