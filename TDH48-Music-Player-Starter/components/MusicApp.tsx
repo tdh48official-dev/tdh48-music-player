@@ -174,6 +174,8 @@ export default function MusicApp({
             />
           </div>
 
+          <div className="flex items-center gap-2">
+          <a href="/playlists" className="rounded-full border border-pink-300/20 px-4 py-2 text-xs text-pink-100/80 transition hover:bg-pink-400/10">เพลย์ลิสต์</a>
           {/* Admin */}
           <a
             href="/admin/login"
@@ -182,6 +184,7 @@ export default function MusicApp({
             <ShieldCheck size={15} />
             Admin
           </a>
+          </div>
         </div>
       </header>
 
