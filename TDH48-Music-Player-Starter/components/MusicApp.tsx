@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {AudioLines,Headphones,Home,Library,Pause,Play,Plus,Repeat,Repeat1,Search,Shuffle,SkipBack,SkipForward,Volume2,ChevronLeft,ChevronRight} from 'lucide-react';
+import {AudioLines,Headphones,Home,Library,Pause,Play,Plus,Repeat,Repeat1,Search,Shuffle,SkipBack,SkipForward,Volume2,ChevronLeft,ChevronRight,Settings} from 'lucide-react';
 import type {Track} from '@/lib/types';
 import {usePlayer} from './PlayerProvider';
 
@@ -30,7 +30,7 @@ export default function MusicApp({initialTracks,initialPlayCounts}:{initialTrack
     <div className="mt-auto rounded-2xl bg-gradient-to-br from-[#ffe4ef] to-[#fff4f8] p-4"><div className="mb-2 text-2xl">🎀</div><b className="text-sm">TDH48 Music</b><p className="mt-1 text-xs leading-5 text-[#a57991]">พื้นที่รวมเพลงและเสียงดนตรีที่คุณชื่นชอบ</p></div>
    </aside>
    <section className="min-w-0 flex-1 px-4 py-5 sm:px-7 lg:px-9">
-    <header className="mb-7 flex items-center justify-between gap-4"><div className="xl:hidden flex items-center gap-2"><img src="/tdh48-logo.png" className="h-10 w-10 rounded-xl object-cover" alt=""/><b className="font-black tracking-widest text-[#9c5275]">TDH48</b></div><div className="hidden xl:block"><p className="text-xs font-semibold tracking-[.18em] text-[#c58ca7]">SUNDAY, MUSIC & YOU</p><h1 className="mt-1 text-xl font-black">ยินดีต้อนรับสู่ TDH48 Music</h1></div><label className="flex w-full max-w-md items-center gap-3 rounded-full border border-[#f0d5e2] bg-white px-4 py-3 shadow-sm"><Search size={17} className="text-[#c58ca7]"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ค้นหาเพลง ศิลปิน หรืออัลบั้ม..." className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#c9a6b7]"/></label></header>
+    <header className="mb-7 flex items-center justify-between gap-4"><div className="xl:hidden flex items-center gap-2"><img src="/tdh48-logo.png" className="h-10 w-10 rounded-xl object-cover" alt=""/><b className="font-black tracking-widest text-[#9c5275]">TDH48</b></div><div className="hidden xl:block"><p className="text-xs font-semibold tracking-[.18em] text-[#c58ca7]">SUNDAY, MUSIC & YOU</p><h1 className="mt-1 text-xl font-black">ยินดีต้อนรับสู่ TDH48 Music</h1></div><label className="flex w-full max-w-md items-center gap-3 rounded-full border border-[#f0d5e2] bg-white px-4 py-3 shadow-sm"><Search size={17} className="text-[#c58ca7]"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ค้นหาเพลง ศิลปิน หรืออัลบั้ม..." className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#c9a6b7]"/></label><a href="/admin/login" aria-label="Admin ผู้ดูแล" title="Admin ผู้ดูแล" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#f0d5e2] bg-white text-[#ad6b8c] shadow-sm transition hover:bg-[#fff0f6] hover:text-[#9c5275]"><Settings size={19}/></a></header>
     <div id="home" className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_310px]">
      <div className="min-w-0 space-y-6">
       <section className="relative overflow-hidden rounded-[28px] border border-[#f1cddd] bg-gradient-to-br from-[#ffe4ef] via-[#fff0f6] to-[#fce2ed] p-5 shadow-[0_14px_40px_rgba(195,105,148,.10)] sm:p-7">
