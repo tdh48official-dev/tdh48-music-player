@@ -11,6 +11,9 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
+  Repeat,
+  Repeat1,
+  Captions,
 } from 'lucide-react';
 
 import { usePlayer } from './PlayerProvider';
@@ -36,9 +39,13 @@ export default function PlayerBar() {
     currentTime,
     duration,
     seek,
+    repeatMode,
+    setRepeatMode,
   } = usePlayer();
 
   const [expanded, setExpanded] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
+  const cycleRepeat = () => setRepeatMode(repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off');
 
   if (!track) return null;
 
@@ -188,6 +195,20 @@ export default function PlayerBar() {
                     <SkipForward size={28} fill="currentColor" />
                   </button>
                 </div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <button type="button" onClick={cycleRepeat} aria-label="เปลี่ยนโหมดเล่นซ้ำ" className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs transition ${repeatMode !== 'off' ? 'border-pink-300/50 bg-pink-400/15 text-pink-200' : 'border-white/10 text-white/50 hover:text-pink-200'}`}>
+                    {repeatMode === 'one' ? <Repeat1 size={16}/> : <Repeat size={16}/>}
+                    {repeatMode === 'off' ? 'เล่นปกติ' : repeatMode === 'all' ? 'เล่นวนทั้งคิว' : 'เล่นวนเพลงนี้'}
+                  </button>
+                  <button type="button" onClick={() => setShowLyrics((v) => !v)} className="flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs text-white/70 hover:border-pink-300/40 hover:text-pink-200">
+                    <Captions size={16}/> {showLyrics ? 'ซ่อนเนื้อเพลง' : 'เนื้อเพลง'}
+                  </button>
+                </div>
+                {showLyrics && <section className="mt-4 max-h-64 overflow-y-auto rounded-2xl border border-pink-300/15 bg-white/5 p-5 text-center">
+                  <h2 className="mb-3 text-sm font-bold text-pink-200">เนื้อเพลง · {track.title}</h2>
+                  {track.lyrics?.trim() ? <p className="whitespace-pre-wrap text-sm leading-8 text-white/80">{track.lyrics}</p> : <p className="text-sm text-white/40">ยังไม่มีเนื้อเพลงสำหรับเพลงนี้</p>}
+                </section>}
 
                 {/* Volume */}
                 <div className="mt-9 flex items-center gap-3">
