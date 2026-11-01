@@ -16,7 +16,6 @@ import {
 
 import type { Track } from '@/lib/types';
 import { usePlayer } from './PlayerProvider';
-import SongRequestPanel from './SongRequestPanel';
 
 export default function MusicApp({
   initialTracks,
@@ -558,7 +557,7 @@ export default function MusicApp({
         )}
       </div>
 
-      <div className="mx-auto max-w-[1600px] px-4 md:px-7"><SongRequestPanel tracks={initialTracks} /></div>
+      <div className="mx-auto max-w-[1600px] px-4 md:px-7"></div>
 
       <footer className="mx-auto mt-16 max-w-[1600px] px-5 text-center text-xs text-pink-200/30">
         © {new Date().getFullYear()} TDH48 MUSIC · Made for the fans
