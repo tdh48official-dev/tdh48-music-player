@@ -29,6 +29,8 @@ type PlayerContextType = {
   seek: (time: number) => void;
   repeatMode: 'off' | 'all' | 'one';
   setRepeatMode: (mode: 'off' | 'all' | 'one') => void;
+  shuffle: boolean;
+  setShuffle: (enabled: boolean) => void;
 };
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -43,6 +45,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
+  const [shuffle, setShuffle] = useState(false);
 
   const setQueue = useCallback((tracks: Track[]) => {
     setQueueState(tracks);
@@ -67,7 +70,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       (item) => item.id === track?.id
     );
 
-    const nextIndex = currentIndex + 1;
+    const nextIndex = shuffle && queue.length > 1
+      ? (() => { const choices = queue.map((_, index) => index).filter(index => index !== currentIndex); return choices[Math.floor(Math.random() * choices.length)]; })()
+      : currentIndex + 1;
     if (nextIndex >= queue.length && repeatMode === 'off') {
       setPlaying(false);
       return;
@@ -75,7 +80,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setTrack(queue[nextIndex >= queue.length ? 0 : Math.max(0, nextIndex)]);
     setCurrentTime(0);
     setPlaying(true);
-  }, [queue, track, repeatMode]);
+  }, [queue, track, repeatMode, shuffle]);
 
   const prev = useCallback(() => {
     if (!audio.current) return;
@@ -166,6 +171,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         seek,
         repeatMode,
         setRepeatMode,
+        shuffle,
+        setShuffle,
       }}
     >
       {children}
