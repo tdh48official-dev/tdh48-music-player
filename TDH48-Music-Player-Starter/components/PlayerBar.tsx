@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   ChevronDown,
   Maximize2,
@@ -13,7 +13,6 @@ import {
   VolumeX,
   Repeat,
   Repeat1,
-  Captions,
 } from 'lucide-react';
 
 import { usePlayer } from './PlayerProvider';
@@ -60,28 +59,6 @@ export default function PlayerBar() {
   } = usePlayer();
 
   const [expanded, setExpanded] = useState(false);
-  const [showLyrics, setShowLyrics] = useState(false);
-  const lyricsViewport = useRef<HTMLDivElement>(null);
-  const timedLyrics = useMemo(() => parseTimedLyrics(track?.lyrics), [track?.lyrics]);
-  const activeLyricIndex = useMemo(() => {
-    let active = -1;
-    for (let i = 0; i < timedLyrics.length; i++) {
-      if (timedLyrics[i].time <= currentTime + 0.08) active = i;
-      else break;
-    }
-    return active;
-  }, [timedLyrics, currentTime]);
-
-  useEffect(() => {
-    const viewport = lyricsViewport.current;
-    if (!showLyrics || activeLyricIndex < 0 || !viewport) return;
-    const active = viewport.querySelector<HTMLElement>('[data-lyric-index="' + activeLyricIndex + '"]');
-    if (!active) return;
-    viewport.scrollTo({
-      top: Math.max(0, active.offsetTop - viewport.offsetTop - viewport.clientHeight * 0.42),
-      behavior: 'smooth',
-    });
-  }, [activeLyricIndex, showLyrics, track?.id]);
   const cycleRepeat = () => setRepeatMode(repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off');
 
   if (!track) return null;
@@ -238,28 +215,6 @@ export default function PlayerBar() {
                     {repeatMode === 'one' ? <Repeat1 size={16}/> : <Repeat size={16}/>}
                     {repeatMode === 'off' ? 'เล่นปกติ' : repeatMode === 'all' ? 'เล่นวนทั้งคิว' : 'เล่นวนเพลงนี้'}
                   </button>
-                  <button type="button" onClick={() => setShowLyrics((v) => !v)} className="flex items-center gap-2 rounded-full border border-[#e9c8d8]/10 px-4 py-2 text-xs text-[#765568]/70 hover:border-pink-300/40 hover:text-[#a34f78]">
-                    <Captions size={16}/> {showLyrics ? 'ซ่อนเนื้อเพลง' : 'เนื้อเพลง'}
-                  </button>
-                </div>
-                {showLyrics && <section className="mt-4 rounded-2xl border border-pink-300/20 bg-white/65 p-4 shadow-inner shadow-pink-100/60">
-                  <h2 className="mb-3 text-center text-sm font-bold text-[#a34f78]">เนื้อเพลง · {track.title}</h2>
-                  {timedLyrics.length > 0 ? (
-                    <div ref={lyricsViewport} className="relative max-h-72 overflow-y-auto scroll-smooth px-2 py-8 text-center [mask-image:linear-gradient(to_bottom,transparent,black_14%,black_86%,transparent)]">
-                      <div className="space-y-5">
-                        {timedLyrics.map((line, index) => (
-                          <p key={line.time + "-" + index} data-lyric-index={index}
-                            className={"mx-auto max-w-xl text-base font-semibold leading-relaxed transition-all duration-300 sm:text-lg " + (index === activeLyricIndex ? "scale-[1.04] text-[#c04483] drop-shadow-sm" : "text-[#9a7b8d]/55")}>
-                            {line.text || "♪"}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                  ) : track.lyrics?.trim() ? (
-                    <div className="max-h-64 overflow-y-auto whitespace-pre-wrap px-2 py-3 text-center text-sm leading-8 text-[#765568]/80">{track.lyrics}<p className="mt-3 text-[11px] text-[#c45d8d]/70">เพิ่มเวลาแต่ละบรรทัดในรูปแบบ [นาที:วินาที.มิลลิวินาที] เพื่อให้เลื่อนตามเพลงอัตโนมัติ</p></div>
-                  ) : <p className="py-8 text-sm text-[#765568]/40">ยังไม่มีเนื้อเพลงสำหรับเพลงนี้</p>}
-                </section>}
-
                 {/* Volume */}
                 <div className="mt-9 flex items-center gap-3">
                   <button
