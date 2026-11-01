@@ -8,7 +8,8 @@ import type { Track } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  let tracks: Track[] = [];\n  let playCounts: { track_id: string; play_count: number }[] = [];
+  let tracks: Track[] = [];
+  let playCounts: { track_id: string; play_count: number }[] = [];
 
   try {
     const supabase = await createClient();
@@ -24,6 +25,19 @@ export default async function Home() {
     } else {
       tracks = (data ?? []) as Track[];
       console.log('Home tracks loaded:', tracks.length);
+    }
+
+    const { data: counts, error: countsError } = await supabase
+      .from('track_play_counts')
+      .select('track_id, play_count');
+
+    if (countsError) {
+      console.error('Home play counts fetch error:', countsError.message);
+    } else {
+      playCounts = (counts ?? []).map((row) => ({
+        track_id: row.track_id as string,
+        play_count: Number(row.play_count) || 0,
+      }));
     }
   } catch (error) {
     console.error('Home Supabase error:', error);
