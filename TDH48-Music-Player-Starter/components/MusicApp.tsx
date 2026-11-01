@@ -7,7 +7,7 @@ import {usePlayer} from './PlayerProvider';
 const fmt=(n:number)=>!Number.isFinite(n)||n<=0?'0:00':`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 export default function MusicApp({initialTracks,initialPlayCounts}:{initialTracks:Track[];initialPlayCounts:{track_id:string;play_count:number}[]}){
  const {track,playing,play,toggle,next,prev,queue,setQueue,addToQueue,currentTime,duration,seek,repeatMode,setRepeatMode,shuffle,setShuffle,volume,setVolume}=usePlayer();
- const [query,setQuery]=useState(''),[category,setCategory]=useState('ทั้งหมด'),[showLyrics,setShowLyrics]=useState(true),[showQueue,setShowQueue]=useState(true),[sort,setSort]=useState('new'),[tab,setTab]=useState('เพลงทั้งหมด');
+ const [query,setQuery]=useState(''),[category,setCategory]=useState('ทั้งหมด'),[showQueue,setShowQueue]=useState(true),[sort,setSort]=useState('new'),[tab,setTab]=useState('เพลงทั้งหมด');
  useEffect(()=>{setQueue(initialTracks)},[initialTracks,setQueue]);
  const categories=['ทั้งหมด','Single','Album','Cover','Live','Original'];
  const tracks=useMemo(()=>{const list=initialTracks.filter(t=>(category==='ทั้งหมด'||t.category===category)&&(`${t.title} ${t.artist} ${t.album||''}`.toLowerCase().includes(query.toLowerCase())));return list.sort((a,b)=>sort==='new'?new Date(b.created_at||b.release_date||0).getTime()-new Date(a.created_at||a.release_date||0).getTime():a.title.localeCompare(b.title))},[initialTracks,category,query,sort]);
