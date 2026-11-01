@@ -27,6 +27,8 @@ type PlayerContextType = {
   setQueue: (tracks: Track[]) => void;
   setVolume: (volume: number) => void;
   seek: (time: number) => void;
+  repeatMode: 'off' | 'all' | 'one';
+  setRepeatMode: (mode: 'off' | 'all' | 'one') => void;
 };
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -40,6 +42,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [volume, setVolumeState] = useState(0.8);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
 
   const setQueue = useCallback((tracks: Track[]) => {
     setQueueState(tracks);
@@ -64,13 +67,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       (item) => item.id === track?.id
     );
 
-    const nextIndex =
-      currentIndex < 0 ? 0 : (currentIndex + 1) % queue.length;
-
-    setTrack(queue[nextIndex]);
+    const nextIndex = currentIndex + 1;
+    if (nextIndex >= queue.length && repeatMode === 'off') {
+      setPlaying(false);
+      return;
+    }
+    setTrack(queue[nextIndex >= queue.length ? 0 : Math.max(0, nextIndex)]);
     setCurrentTime(0);
     setPlaying(true);
-  }, [queue, track]);
+  }, [queue, track, repeatMode]);
 
   const prev = useCallback(() => {
     if (!audio.current) return;
@@ -159,6 +164,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         setQueue,
         setVolume,
         seek,
+        repeatMode,
+        setRepeatMode,
       }}
     >
       {children}
@@ -177,7 +184,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         }
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
-        onEnded={next}
+        onEnded={() => {
+          if (repeatMode === 'one' && audio.current) {
+            audio.current.currentTime = 0;
+            audio.current.play().catch(() => setPlaying(false));
+            return;
+          }
+          next();
+        }}
       />
     </PlayerContext.Provider>
   );
