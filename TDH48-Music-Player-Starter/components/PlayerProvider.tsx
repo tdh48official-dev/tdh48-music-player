@@ -10,7 +10,7 @@ import {
 } from 'react';
 
 import type { ReactNode, RefObject } from 'react';
-import type { Track } from '@/lib/types';
+import type { Track } from '@/lib/types';\nimport { createClient } from '@/lib/supabase/client';
 
 type PlayerContextType = {
   track: Track | null;
@@ -37,7 +37,7 @@ type PlayerContextType = {
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
-  const audio = useRef<HTMLAudioElement>(null);
+  const audio = useRef<HTMLAudioElement>(null);\n  const countedTrackRef = useRef<string | null>(null);\n  const supabase = createClient();
 
   const [track, setTrack] = useState<Track | null>(null);
   const [queue, setQueueState] = useState<Track[]>([]);
@@ -195,7 +195,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         onDurationChange={(e) =>
           setDuration(e.currentTarget.duration || 0)
         }
-        onPlay={() => setPlaying(true)}
+        onPlay={() => {\n          setPlaying(true);\n          if (track && countedTrackRef.current !== track.id) {\n            countedTrackRef.current = track.id;\n            void supabase.from('track_plays').insert({ track_id: track.id }).then(({ error }) => {\n              if (error) console.warn('Could not record track play:', error.message);\n            });\n          }\n        }}
         onPause={() => setPlaying(false)}
         onEnded={() => {
           if (repeatMode === 'one' && audio.current) {
