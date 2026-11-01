@@ -17,22 +17,6 @@ import {
 
 import { usePlayer } from './PlayerProvider';
 
-type LyricLine = { time: number; text: string };
-
-function parseTimedLyrics(raw?: string | null): LyricLine[] {
-  if (!raw) return [];
-  const lines: LyricLine[] = [];
-  for (const sourceLine of raw.split(/\r?\n/)) {
-    const matches = [...sourceLine.matchAll(/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g)];
-    if (!matches.length) continue;
-    const text = sourceLine.replace(/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g, '').trim();
-    for (const match of matches) {
-      const fraction = match[3] ? Number('0.' + match[3]) : 0;
-      lines.push({ time: Number(match[1]) * 60 + Number(match[2]) + fraction, text });
-    }
-  }
-  return lines.sort((a, b) => a.time - b.time);
-}
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
 
