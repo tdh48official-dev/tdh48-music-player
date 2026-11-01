@@ -142,9 +142,9 @@ export default function MusicApp({
   };
 
   return (
-    <main className="min-h-screen bg-[#090909] pb-36 text-white">
+    <main className="min-h-screen bg-[#fff7fb] pb-36 text-[#54384a]">
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-pink-400/10 bg-[#090909]/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 border-b border-pink-400/10 bg-[#fff7fb]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-4 md:px-7">
           <a href="/" className="flex items-center gap-3">
             <img
@@ -154,19 +154,19 @@ export default function MusicApp({
             />
 
             <div>
-              <div className="font-black tracking-[.15em] text-pink-100">
+              <div className="font-black tracking-[.15em] text-[#75445e]">
                 TDH48
               </div>
 
-              <div className="text-[9px] tracking-[.3em] text-pink-300/60">
+              <div className="text-[9px] tracking-[.3em] text-[#c45d8d]/60">
                 MUSIC PLAYER
               </div>
             </div>
           </a>
 
           {/* Search Desktop */}
-          <div className="hidden max-w-md flex-1 items-center gap-3 rounded-full border border-pink-300/10 bg-white/5 px-5 py-3 md:flex">
-            <Search size={18} className="text-pink-300/60" />
+          <div className="hidden max-w-md flex-1 items-center gap-3 rounded-full border border-pink-300/10 bg-[#f8e8ef]/5 px-5 py-3 md:flex">
+            <Search size={18} className="text-[#c45d8d]/60" />
 
             <input
               value={q}
@@ -175,14 +175,14 @@ export default function MusicApp({
                 setSelectedTrack(null);
               }}
               placeholder="ค้นหาเพลงหรือศิลปิน..."
-              className="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-[#765568]/40"
             />
           </div>
 
           <div className="flex items-center gap-2">
             <a
               href="/playlists"
-              className="rounded-full border border-pink-300/20 px-4 py-2 text-xs text-pink-100/80 transition hover:bg-pink-400/10"
+              className="rounded-full border border-pink-300/20 px-4 py-2 text-xs text-[#75445e]/80 transition hover:bg-[#e98bb5]/10"
             >
               เพลย์ลิสต์
             </a>
@@ -190,7 +190,7 @@ export default function MusicApp({
             {/* Admin */}
             <a
               href="/admin/login"
-              className="flex items-center gap-2 rounded-full border border-pink-300/20 px-4 py-2 text-xs text-pink-100/80 transition hover:border-pink-300/50 hover:bg-pink-400/10 hover:text-pink-200"
+              className="flex items-center gap-2 rounded-full border border-pink-300/20 px-4 py-2 text-xs text-[#75445e]/80 transition hover:border-pink-300/50 hover:bg-[#e98bb5]/10 hover:text-[#a34f78]"
             >
               <ShieldCheck size={15} />
               Admin
@@ -205,7 +205,7 @@ export default function MusicApp({
           <section>
             <button
               onClick={() => setSelectedTrack(null)}
-              className="mb-6 flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm text-white/80 transition hover:bg-pink-400/20 hover:text-pink-200"
+              className="mb-6 flex items-center gap-2 rounded-full bg-[#f8e8ef]/10 px-4 py-2 text-sm text-[#765568]/80 transition hover:bg-[#e98bb5]/20 hover:text-[#a34f78]"
             >
               <ArrowLeft size={18} />
               ย้อนกลับ
@@ -223,7 +223,7 @@ export default function MusicApp({
                 />
 
                 <div className="min-w-0 flex-1 text-center md:text-left">
-                  <div className="mb-3 text-sm font-semibold text-pink-200">
+                  <div className="mb-3 text-sm font-semibold text-[#a34f78]">
                     {selectedTrack.album ? 'อัลบั้ม' : 'ซิงเกิล'}
                   </div>
 
@@ -231,8 +231,8 @@ export default function MusicApp({
                     {selectedTrack.album || selectedTrack.title}
                   </h1>
 
-                  <div className="mt-5 text-sm text-white/70">
-                    <span className="font-semibold text-white">
+                  <div className="mt-5 text-sm text-[#765568]/70">
+                    <span className="font-semibold text-[#54384a]">
                       {selectedTrack.artist}
                     </span>
 
@@ -241,7 +241,7 @@ export default function MusicApp({
                     )}
                   </div>
 
-                  <div className="mt-2 text-xs text-white/50">
+                  <div className="mt-2 text-xs text-[#765568]/50">
                     {selectedTrack.category}
                     {selectedTrack.release_date &&
                       ` · ${formatDate(selectedTrack.release_date)}`}
@@ -255,7 +255,7 @@ export default function MusicApp({
             <div className="my-7 flex items-center gap-5">
               <button
                 onClick={() => playTrack(selectedTrack, detailTracks)}
-                className="grid h-16 w-16 place-items-center rounded-full bg-pink-400 text-[#260d1b] shadow-xl shadow-pink-500/25 transition hover:scale-110 hover:bg-pink-300 active:scale-95"
+                className="grid h-16 w-16 place-items-center rounded-full bg-[#e98bb5] text-white shadow-xl shadow-pink-500/25 transition hover:scale-110 hover:bg-pink-300 active:scale-95"
                 aria-label="เล่นเพลง"
               >
                 <Play size={29} fill="currentColor" />
@@ -266,14 +266,14 @@ export default function MusicApp({
                   รายการเพลง
                 </div>
 
-                <div className="text-xs text-pink-200/40">
+                <div className="text-xs text-[#a34f78]/40">
                   TDH48 Music Library
                 </div>
               </div>
             </div>
 
             {/* รายการเพลง */}
-            <div className="border-b border-white/10 pb-3 text-xs text-white/40">
+            <div className="border-b border-[#e9c8d8]/10 pb-3 text-xs text-[#765568]/40">
               <div className="grid grid-cols-[35px_1fr_55px] px-4">
                 <span>#</span>
                 <span>ชื่อเพลง</span>
@@ -286,11 +286,11 @@ export default function MusicApp({
                 <button
                   key={item.id}
                   onClick={() => playTrack(item, detailTracks)}
-                  className={`grid w-full grid-cols-[35px_1fr_55px] items-center rounded-xl px-4 py-4 text-left transition hover:bg-pink-400/10 ${
-                    track?.id === item.id ? 'bg-pink-400/10' : ''
+                  className={`grid w-full grid-cols-[35px_1fr_55px] items-center rounded-xl px-4 py-4 text-left transition hover:bg-[#e98bb5]/10 ${
+                    track?.id === item.id ? 'bg-[#e98bb5]/10' : ''
                   }`}
                 >
-                  <span className="text-sm text-pink-300">
+                  <span className="text-sm text-[#c45d8d]">
                     {track?.id === item.id && playing
                       ? '♫'
                       : index + 1}
@@ -300,19 +300,19 @@ export default function MusicApp({
                     <span
                       className={`block truncate text-sm font-semibold ${
                         track?.id === item.id
-                          ? 'text-pink-300'
-                          : 'text-white'
+                          ? 'text-[#c45d8d]'
+                          : 'text-[#54384a]'
                       }`}
                     >
                       {item.title}
                     </span>
 
-                    <span className="block truncate text-xs text-white/45">
+                    <span className="block truncate text-xs text-[#765568]/45">
                       {item.artist}
                     </span>
                   </span>
 
-                  <span className="text-right text-xs text-white/40">
+                  <span className="text-right text-xs text-[#765568]/40">
                     {item.duration_seconds
                       ? `${Math.floor(
                           item.duration_seconds / 60
@@ -356,12 +356,12 @@ export default function MusicApp({
                   />
 
                   <div className="min-w-0 flex-1 text-center md:text-left">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-pink-300/20 bg-pink-400/10 px-3 py-1 text-xs text-pink-200">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-pink-300/20 bg-[#e98bb5]/10 px-3 py-1 text-xs text-[#a34f78]">
                       <Headphones size={14} />
                       TDH48 FEATURED MUSIC
                     </div>
 
-                    <div className="text-sm text-white/60">
+                    <div className="text-sm text-[#765568]/60">
                       เพลงแนะนำ
                     </div>
 
@@ -369,11 +369,11 @@ export default function MusicApp({
                       {featured.title}
                     </h1>
 
-                    <div className="mt-3 text-sm text-white/70">
+                    <div className="mt-3 text-sm text-[#765568]/70">
                       {featured.artist}
                     </div>
 
-                    <div className="mt-2 text-xs text-white/45">
+                    <div className="mt-2 text-xs text-[#765568]/45">
                       {featured.category}
                       {featured.album ? ` · ${featured.album}` : ''}
                     </div>
@@ -381,7 +381,7 @@ export default function MusicApp({
                     <div className="mt-7 flex flex-wrap justify-center gap-3 md:justify-start">
                       <button
                         onClick={() => playTrack(featured)}
-                        className="flex items-center gap-3 rounded-full bg-pink-400 px-7 py-3 font-bold text-[#260d1b] shadow-lg shadow-pink-500/20 transition hover:scale-105 hover:bg-pink-300 active:scale-95"
+                        className="flex items-center gap-3 rounded-full bg-[#e98bb5] px-7 py-3 font-bold text-white shadow-lg shadow-pink-500/20 transition hover:scale-105 hover:bg-pink-300 active:scale-95"
                       >
                         <Play size={18} fill="currentColor" />
                         เล่นเพลง
@@ -389,7 +389,7 @@ export default function MusicApp({
 
                       <button
                         onClick={() => openTrack(featured)}
-                        className="rounded-full border border-pink-200/30 px-6 py-3 text-sm transition hover:border-pink-300/60 hover:bg-pink-400/10"
+                        className="rounded-full border border-pink-200/30 px-6 py-3 text-sm transition hover:border-pink-300/60 hover:bg-[#e98bb5]/10"
                       >
                         ดูรายละเอียด
                       </button>
@@ -403,7 +403,7 @@ export default function MusicApp({
                         type="button"
                         onClick={previousFeatured}
                         aria-label="เพลงแนะนำก่อนหน้า"
-                        className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur transition hover:bg-pink-400 hover:text-black md:left-5"
+                        className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-[#e9c8d8]/20 bg-black/40 text-[#54384a] backdrop-blur transition hover:bg-[#e98bb5] hover:text-black md:left-5"
                       >
                         <ChevronLeft size={22} />
                       </button>
@@ -412,7 +412,7 @@ export default function MusicApp({
                         type="button"
                         onClick={nextFeatured}
                         aria-label="เพลงแนะนำถัดไป"
-                        className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur transition hover:bg-pink-400 hover:text-black md:right-5"
+                        className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-[#e9c8d8]/20 bg-black/40 text-[#54384a] backdrop-blur transition hover:bg-[#e98bb5] hover:text-black md:right-5"
                       >
                         <ChevronRight size={22} />
                       </button>
@@ -431,7 +431,7 @@ export default function MusicApp({
                           className={`h-2 rounded-full transition-all ${
                             index === featuredIndex
                               ? 'w-7 bg-pink-300'
-                              : 'w-2 bg-white/40 hover:bg-white/70'
+                              : 'w-2 bg-[#f8e8ef]/40 hover:bg-[#f8e8ef]/70'
                           }`}
                         />
                       ))}
@@ -445,7 +445,7 @@ export default function MusicApp({
             <section>
               <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                  <div className="text-xs font-bold tracking-[.25em] text-pink-300">
+                  <div className="text-xs font-bold tracking-[.25em] text-[#c45d8d]">
                     DISCOVER
                   </div>
 
@@ -455,8 +455,8 @@ export default function MusicApp({
                 </div>
 
                 {/* Search Mobile */}
-                <div className="flex items-center gap-2 rounded-full border border-pink-300/10 bg-white/5 px-4 py-3 md:hidden">
-                  <Search size={17} className="text-pink-300/60" />
+                <div className="flex items-center gap-2 rounded-full border border-pink-300/10 bg-[#f8e8ef]/5 px-4 py-3 md:hidden">
+                  <Search size={17} className="text-[#c45d8d]/60" />
 
                   <input
                     value={q}
@@ -475,8 +475,8 @@ export default function MusicApp({
                     onClick={() => setCategory(c)}
                     className={`whitespace-nowrap rounded-full px-5 py-2.5 text-xs transition ${
                       category === c
-                        ? 'bg-pink-400 font-bold text-[#260d1b] shadow-lg shadow-pink-500/20'
-                        : 'bg-white/10 text-white/70 hover:bg-pink-400/15 hover:text-pink-200'
+                        ? 'bg-[#e98bb5] font-bold text-white shadow-lg shadow-pink-500/20'
+                        : 'bg-[#f8e8ef]/10 text-[#765568]/70 hover:bg-[#e98bb5]/15 hover:text-[#a34f78]'
                     }`}
                   >
                     {c}
@@ -486,17 +486,17 @@ export default function MusicApp({
 
               {/* Music Cards */}
               {tracks.length === 0 ? (
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-12 text-center">
+                <div className="rounded-3xl border border-[#e9c8d8]/10 bg-[#f8e8ef]/5 p-12 text-center">
                   <Disc3
                     size={40}
-                    className="mx-auto mb-4 text-pink-300/50"
+                    className="mx-auto mb-4 text-[#c45d8d]/50"
                   />
 
                   <h3 className="font-bold">
                     ยังไม่มีเพลงในหมวดนี้
                   </h3>
 
-                  <p className="mt-2 text-sm text-white/40">
+                  <p className="mt-2 text-sm text-[#765568]/40">
                     ลองเลือกหมวดอื่นหรือค้นหาเพลงใหม่
                   </p>
                 </div>
@@ -505,13 +505,13 @@ export default function MusicApp({
                   {tracks.map((item) => (
                     <div
                       key={item.id}
-                      className="group min-w-0 rounded-2xl bg-white/[0.04] p-3 transition hover:bg-pink-400/[0.08]"
+                      className="group min-w-0 rounded-2xl bg-[#f8e8ef]/[0.04] p-3 transition hover:bg-[#e98bb5]/[0.08]"
                     >
                       <button
                         onClick={() => openTrack(item)}
                         className="block w-full text-left"
                       >
-                        <div className="relative aspect-square overflow-hidden rounded-xl bg-white/10">
+                        <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f8e8ef]/10">
                           <img
                             src={
                               item.cover_url ||
@@ -521,7 +521,7 @@ export default function MusicApp({
                             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                           />
 
-                          <div className="absolute bottom-3 right-3 grid h-11 w-11 translate-y-3 place-items-center rounded-full bg-pink-400 text-[#260d1b] opacity-0 shadow-xl shadow-pink-500/30 transition group-hover:translate-y-0 group-hover:opacity-100">
+                          <div className="absolute bottom-3 right-3 grid h-11 w-11 translate-y-3 place-items-center rounded-full bg-[#e98bb5] text-white opacity-0 shadow-xl shadow-pink-500/30 transition group-hover:translate-y-0 group-hover:opacity-100">
                             <Play size={19} fill="currentColor" />
                           </div>
                         </div>
@@ -530,18 +530,18 @@ export default function MusicApp({
                           {item.title}
                         </div>
 
-                        <div className="mt-1 truncate text-xs text-white/45">
+                        <div className="mt-1 truncate text-xs text-[#765568]/45">
                           {item.artist}
                         </div>
 
-                        <div className="mt-2 truncate text-[10px] text-pink-200/40">
+                        <div className="mt-2 truncate text-[10px] text-[#a34f78]/40">
                           {item.category}
                         </div>
                       </button>
 
                       <button
                         onClick={() => playTrack(item)}
-                        className="mt-3 w-full rounded-full border border-pink-300/20 py-2 text-xs text-pink-200/80 transition hover:border-pink-300/50 hover:bg-pink-400/15 hover:text-pink-100"
+                        className="mt-3 w-full rounded-full border border-pink-300/20 py-2 text-xs text-[#a34f78]/80 transition hover:border-pink-300/50 hover:bg-[#e98bb5]/15 hover:text-[#75445e]"
                       >
                         <span className="inline-flex items-center gap-2">
                           <Play size={12} fill="currentColor" />
@@ -559,7 +559,7 @@ export default function MusicApp({
 
       <div className="mx-auto max-w-[1600px] px-4 md:px-7"></div>
 
-      <footer className="mx-auto mt-16 max-w-[1600px] px-5 text-center text-xs text-pink-200/30">
+      <footer className="mx-auto mt-16 max-w-[1600px] px-5 text-center text-xs text-[#a34f78]/30">
         © {new Date().getFullYear()} TDH48 MUSIC · Made for the fans
       </footer>
     </main>
