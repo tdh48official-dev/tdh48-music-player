@@ -8,7 +8,7 @@ import type { Track } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  let tracks: Track[] = [];
+  let tracks: Track[] = [];\n  let playCounts: { track_id: string; play_count: number }[] = [];
 
   try {
     const supabase = await createClient();
@@ -31,7 +31,7 @@ export default async function Home() {
 
   return (
     <PlayerProvider>
-      <MusicApp initialTracks={tracks} />
+      <MusicApp initialTracks={tracks} initialPlayCounts={playCounts} />
       <PlayerBar />
     </PlayerProvider>
   );
