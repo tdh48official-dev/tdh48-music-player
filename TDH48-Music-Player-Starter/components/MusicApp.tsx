@@ -1,567 +1,66 @@
-
 'use client';
+import {useEffect,useMemo,useState} from 'react';
+import {Activity,Album,ArrowUpRight,AudioLines,BookOpen,ChevronRight,Disc3,Heart,Headphones,Home,Library, ListMusic,LogIn,Music2,Pause,Play,Plus,Repeat,Repeat1,Search,Settings,ShieldCheck,Shuffle,SkipBack,SkipForward,Volume2,X} from 'lucide-react';
+import type {Track} from '@/lib/types';
+import {usePlayer} from './PlayerProvider';
 
-import { useEffect, useMemo, useState } from 'react';
-
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  Disc3,
-  Headphones,
-  Play,
-  Search,
-  ShieldCheck,
-} from 'lucide-react';
-
-import type { Track } from '@/lib/types';
-import { usePlayer } from './PlayerProvider';
-
-export default function MusicApp({
-  initialTracks,
-}: {
-  initialTracks: Track[];
-}) {
-  const [q, setQ] = useState('');
-  const [category, setCategory] = useState('ทั้งหมด');
-  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
-  const [featuredIndex, setFeaturedIndex] = useState(0);
-
-  const { play, track, playing, setQueue } = usePlayer();
-
-  const cats = [
-    'ทั้งหมด',
-    'Single',
-    'Album',
-    'Cover',
-    'Live',
-    'Original',
-  ];
-
-  useEffect(() => {
-    setQueue(initialTracks);
-  }, [initialTracks, setQueue]);
-
-  const tracks = useMemo(() => {
-    return initialTracks.filter((t) => {
-      const matchesCategory =
-        category === 'ทั้งหมด' || t.category === category;
-
-      const matchesSearch =
-        `${t.title} ${t.artist} ${t.album || ''}`
-          .toLowerCase()
-          .includes(q.toLowerCase());
-
-      return matchesCategory && matchesSearch;
-    });
-  }, [initialTracks, q, category]);
-
-  // เพลงที่แอดมินเลือกให้เป็นเพลงแนะนำ
-  const featuredTracks = useMemo(
-    () => initialTracks.filter((t) => t.is_featured),
-    [initialTracks]
-  );
-
-  const featured = featuredTracks[featuredIndex] || null;
-
-  // เปลี่ยนสไลด์อัตโนมัติทุก 5 วินาที
-  useEffect(() => {
-    if (featuredTracks.length <= 1) {
-      setFeaturedIndex(0);
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      setFeaturedIndex(
-        (current) => (current + 1) % featuredTracks.length
-      );
-    }, 5000);
-
-    return () => window.clearInterval(timer);
-  }, [featuredTracks.length]);
-
-  // ป้องกัน index เกินเมื่อมีการเพิ่มหรือลบเพลงแนะนำ
-  useEffect(() => {
-    setFeaturedIndex((current) =>
-      featuredTracks.length === 0
-        ? 0
-        : current % featuredTracks.length
-    );
-  }, [featuredTracks.length]);
-
-  const nextFeatured = () => {
-    if (featuredTracks.length <= 1) return;
-
-    setFeaturedIndex(
-      (current) => (current + 1) % featuredTracks.length
-    );
-  };
-
-  const previousFeatured = () => {
-    if (featuredTracks.length <= 1) return;
-
-    setFeaturedIndex(
-      (current) =>
-        (current - 1 + featuredTracks.length) %
-        featuredTracks.length
-    );
-  };
-
-  const detailTracks = useMemo(() => {
-    if (!selectedTrack) return [];
-
-    if (selectedTrack.album) {
-      return initialTracks.filter(
-        (t) =>
-          t.album === selectedTrack.album &&
-          t.artist === selectedTrack.artist
-      );
-    }
-
-    return [selectedTrack];
-  }, [selectedTrack, initialTracks]);
-
-  const openTrack = (item: Track) => {
-    setSelectedTrack(item);
-  };
-
-  // เล่นเพลงได้ทันทีโดยไม่ต้องเปิดป็อปอัพ
-  const playTrack = (item: Track, list = initialTracks) => {
-    setQueue(list);
-    play(item);
-  };
-
-  const formatDate = (date: string | null) => {
-    if (!date) return '';
-
-    return new Date(date).toLocaleDateString('th-TH', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
-
-  return (
-    <main className="min-h-screen bg-[#fff7fb] pb-36 text-[#54384a]">
-      {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-pink-400/10 bg-[#fff7fb]/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-4 md:px-7">
-          <a href="/" className="flex items-center gap-3">
-            <img
-              src="/tdh48-logo.png"
-              alt="TDH48 Logo"
-              className="h-12 w-12 shrink-0 rounded-full border-2 border-pink-400/70 object-cover shadow-lg shadow-pink-500/20"
-            />
-
-            <div>
-              <div className="font-black tracking-[.15em] text-[#75445e]">
-                TDH48
-              </div>
-
-              <div className="text-[9px] tracking-[.3em] text-[#c45d8d]/60">
-                MUSIC PLAYER
-              </div>
-            </div>
-          </a>
-
-          {/* Search Desktop */}
-          <div className="hidden max-w-md flex-1 items-center gap-3 rounded-full border border-pink-300/10 bg-[#f8e8ef]/5 px-5 py-3 md:flex">
-            <Search size={18} className="text-[#c45d8d]/60" />
-
-            <input
-              value={q}
-              onChange={(e) => {
-                setQ(e.target.value);
-                setSelectedTrack(null);
-              }}
-              placeholder="ค้นหาเพลงหรือศิลปิน..."
-              className="w-full bg-transparent text-sm outline-none placeholder:text-[#765568]/40"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <a
-              href="/playlists"
-              className="rounded-full border border-pink-300/20 px-4 py-2 text-xs text-[#75445e]/80 transition hover:bg-[#e98bb5]/10"
-            >
-              เพลย์ลิสต์
-            </a>
-
-            {/* Admin */}
-            <a
-              href="/admin/login"
-              className="flex items-center gap-2 rounded-full border border-pink-300/20 px-4 py-2 text-xs text-[#75445e]/80 transition hover:border-pink-300/50 hover:bg-[#e98bb5]/10 hover:text-[#a34f78]"
-            >
-              <ShieldCheck size={15} />
-              Admin
-            </a>
-          </div>
+const fmt=(n:number)=>!Number.isFinite(n)||n<=0?'0:00':`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
+export default function MusicApp({initialTracks}:{initialTracks:Track[]}){
+ const {track,playing,play,toggle,next,prev,queue,setQueue,addToQueue,currentTime,duration,seek,repeatMode,setRepeatMode,shuffle,setShuffle,volume,setVolume}=usePlayer();
+ const [query,setQuery]=useState(''),[category,setCategory]=useState('ทั้งหมด'),[showLyrics,setShowLyrics]=useState(true),[showQueue,setShowQueue]=useState(true),[sort,setSort]=useState('new'),[tab,setTab]=useState('เพลงทั้งหมด');
+ const [playlistNames,setPlaylistNames]=useState<{id:string;title:string;cover_url:string|null}[]>([]);
+ useEffect(()=>{setQueue(initialTracks)},[initialTracks,setQueue]);
+ useEffect(()=>{let alive=true;import('@/lib/supabase/client').then(({createClient})=>{const db=createClient();db.from('playlists').select('id,title,cover_url').eq('is_public',true).order('created_at',{ascending:false}).limit(4).then(({data})=>{if(alive)setPlaylistNames(data||[])})});return()=>{alive=false}},[]);
+ const categories=['ทั้งหมด','Single','Album','Cover','Live','Original'];
+ const tracks=useMemo(()=>{const list=initialTracks.filter(t=>(category==='ทั้งหมด'||t.category===category)&&(`${t.title} ${t.artist} ${t.album||''}`.toLowerCase().includes(query.toLowerCase())));return list.sort((a,b)=>sort==='new'?new Date(b.created_at||b.release_date||0).getTime()-new Date(a.created_at||a.release_date||0).getTime():a.title.localeCompare(b.title))},[initialTracks,category,query,sort]);
+ const featured=initialTracks.find(t=>t.is_featured)||initialTracks[0]||null;
+ const playFrom=(t:Track)=>{setQueue(tracks.length?tracks:initialTracks);play(t)};
+ const cycleRepeat=()=>setRepeatMode(repeatMode==='off'?'all':repeatMode==='all'?'one':'off');
+ return <main className="min-h-screen bg-[#fff7fb] pb-32 text-[#654458]">
+  <div className="mx-auto flex max-w-[1700px]">
+   <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-[#f0d5e2] bg-white/70 px-5 py-7 xl:flex">
+    <a href="/" className="mb-10 flex items-center gap-3"><img src="/tdh48-logo.png" className="h-12 w-12 rounded-2xl object-cover shadow-md" alt="TDH48"/><span><b className="block text-xl font-black tracking-widest text-[#9c5275]">TDH48</b><small className="text-[9px] tracking-[.25em] text-[#c27b9d]">MUSIC STATION</small></span></a>
+    <p className="mb-3 px-3 text-[10px] font-bold tracking-[.22em] text-[#c58ca7]">MENU</p>
+    <nav className="space-y-1 text-sm">
+     <a href="#home" className="flex items-center gap-3 rounded-xl bg-[#fce6f0] px-4 py-3 font-bold text-[#a34f78]"><Home size={17}/> หน้าแรก</a>
+     <a href="#library" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Library size={17}/> คลังเพลง</a>
+     <a href="/playlists" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><ListMusic size={17}/> เพลย์ลิสต์</a>
+     <a href="/playlists#merge" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Disc3 size={17}/> รวมลิสต์เพลง</a>
+     <button onClick={()=>setShowQueue(!showQueue)} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left hover:bg-[#fff0f6]"><AudioLines size={17}/> คิวเพลง</button>
+    </nav>
+    <p className="mb-3 mt-9 px-3 text-[10px] font-bold tracking-[.22em] text-[#c58ca7]">ACCOUNT</p>
+    <nav className="space-y-1 text-sm"><a href="/playlists" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><LogIn size={17}/> เข้าสู่ระบบสมาชิก</a><a href="/admin/login" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><ShieldCheck size={17}/> ผู้ดูแลระบบ</a></nav>
+    <div className="mt-auto rounded-2xl bg-gradient-to-br from-[#ffe4ef] to-[#fff4f8] p-4"><div className="mb-2 text-2xl">🎀</div><b className="text-sm">TDH48 Music</b><p className="mt-1 text-xs leading-5 text-[#a57991]">พื้นที่รวมเพลงและเสียงดนตรีที่คุณชื่นชอบ</p></div>
+   </aside>
+   <section className="min-w-0 flex-1 px-4 py-5 sm:px-7 lg:px-9">
+    <header className="mb-7 flex items-center justify-between gap-4"><div className="xl:hidden flex items-center gap-2"><img src="/tdh48-logo.png" className="h-10 w-10 rounded-xl object-cover" alt=""/><b className="font-black tracking-widest text-[#9c5275]">TDH48</b></div><div className="hidden xl:block"><p className="text-xs font-semibold tracking-[.18em] text-[#c58ca7]">SUNDAY, MUSIC & YOU</p><h1 className="mt-1 text-xl font-black">ยินดีต้อนรับสู่ TDH48 Music</h1></div><label className="flex w-full max-w-md items-center gap-3 rounded-full border border-[#f0d5e2] bg-white px-4 py-3 shadow-sm"><Search size={17} className="text-[#c58ca7]"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ค้นหาเพลง ศิลปิน หรืออัลบั้ม..." className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#c9a6b7]"/></label><a href="/admin/login" className="hidden rounded-full border border-[#f0d5e2] bg-white p-3 text-[#b76d91] sm:block"><Settings size={18}/></a></header>
+    <div id="home" className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_310px]">
+     <div className="min-w-0 space-y-6">
+      <section className="relative overflow-hidden rounded-[28px] border border-[#f1cddd] bg-gradient-to-br from-[#ffe4ef] via-[#fff0f6] to-[#fce2ed] p-5 shadow-[0_14px_40px_rgba(195,105,148,.10)] sm:p-7">
+       <div className="absolute -right-8 -top-16 h-64 w-64 rounded-full bg-white/60 blur-2xl"/><div className="relative grid items-center gap-6 md:grid-cols-[190px_1fr]">
+        <div className="relative mx-auto w-full max-w-[190px]"><div className="absolute inset-2 rounded-[28px] bg-[#e9a6c3] blur-xl"/><img src={(track||featured)?.cover_url||'/cover-placeholder.svg'} alt="" className="relative aspect-square w-full rounded-[24px] border-4 border-white/80 object-cover shadow-xl"/></div>
+        <div className="min-w-0"><span className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-3 py-1.5 text-[10px] font-bold tracking-[.2em] text-[#b76d91]"><Headphones size={13}/> NOW PLAYING</span><h2 className="mt-3 truncate text-2xl font-black text-[#75445e] sm:text-3xl">{track?.title||featured?.title||'เลือกเพลงที่คุณชอบ'}</h2><p className="mt-1 text-sm text-[#ae7893]">{track?.artist||featured?.artist||'TDH48'}</p>
+         <div className="mt-5 flex items-center gap-3"><button onClick={()=>track?toggle():featured&&playFrom(featured)} className="grid h-12 w-12 place-items-center rounded-full bg-[#df80aa] text-white shadow-lg shadow-pink-300/50 hover:scale-105">{playing?<Pause fill="currentColor" size={20}/>:<Play fill="currentColor" size={20}/>}</button><button onClick={prev} className="rounded-full bg-white/70 p-3 text-[#ad6b8c]"><SkipBack size={18}/></button><button onClick={next} className="rounded-full bg-white/70 p-3 text-[#ad6b8c]"><SkipForward size={18}/></button><button onClick={cycleRepeat} title="เล่นซ้ำ" className={`rounded-full p-3 ${repeatMode!=='off'?'bg-[#df80aa] text-white':'bg-white/70 text-[#ad6b8c]'}`}>{repeatMode==='one'?<Repeat1 size={18}/>:<Repeat size={18}/>}</button><button onClick={()=>setShuffle(!shuffle)} title="สุ่มเพลง" className={`rounded-full p-3 ${shuffle?'bg-[#df80aa] text-white':'bg-white/70 text-[#ad6b8c]'}`}><Shuffle size={18}/></button></div>
+         <div className="mt-5 flex items-center gap-3 text-[10px] tabular-nums text-[#ae7893]"><span>{fmt(currentTime)}</span><input type="range" min="0" max={duration||1} value={Math.min(currentTime,duration||0)} onChange={e=>seek(Number(e.target.value))} className="h-1 flex-1 accent-[#df80aa]"/><span>{fmt(duration)}</span></div>
         </div>
-      </header>
-
-      <div className="mx-auto max-w-[1600px] px-4 py-6 md:px-7">
-        {/* หน้ารายละเอียดเพลง */}
-        {selectedTrack ? (
-          <section>
-            <button
-              onClick={() => setSelectedTrack(null)}
-              className="mb-6 flex items-center gap-2 rounded-full bg-[#f8e8ef]/10 px-4 py-2 text-sm text-[#765568]/80 transition hover:bg-[#e98bb5]/20 hover:text-[#a34f78]"
-            >
-              <ArrowLeft size={18} />
-              ย้อนกลับ
-            </button>
-
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#6b354f] to-[#20121c] p-5 md:p-10">
-              <div className="relative z-10 flex flex-col items-center gap-7 md:flex-row md:items-end">
-                <img
-                  src={
-                    selectedTrack.cover_url ||
-                    '/cover-placeholder.svg'
-                  }
-                  alt={selectedTrack.title}
-                  className="aspect-square w-56 rounded-xl object-cover shadow-2xl md:w-72"
-                />
-
-                <div className="min-w-0 flex-1 text-center md:text-left">
-                  <div className="mb-3 text-sm font-semibold text-[#a34f78]">
-                    {selectedTrack.album ? 'อัลบั้ม' : 'ซิงเกิล'}
-                  </div>
-
-                  <h1 className="break-words text-3xl font-black md:text-6xl">
-                    {selectedTrack.album || selectedTrack.title}
-                  </h1>
-
-                  <div className="mt-5 text-sm text-[#765568]/70">
-                    <span className="font-semibold text-[#54384a]">
-                      {selectedTrack.artist}
-                    </span>
-
-                    {selectedTrack.album && (
-                      <span> · {selectedTrack.title}</span>
-                    )}
-                  </div>
-
-                  <div className="mt-2 text-xs text-[#765568]/50">
-                    {selectedTrack.category}
-                    {selectedTrack.release_date &&
-                      ` · ${formatDate(selectedTrack.release_date)}`}
-                    {` · ${detailTracks.length} เพลง`}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ปุ่มเล่นอัลบั้ม */}
-            <div className="my-7 flex items-center gap-5">
-              <button
-                onClick={() => playTrack(selectedTrack, detailTracks)}
-                className="grid h-16 w-16 place-items-center rounded-full bg-[#e98bb5] text-white shadow-xl shadow-pink-500/25 transition hover:scale-110 hover:bg-pink-300 active:scale-95"
-                aria-label="เล่นเพลง"
-              >
-                <Play size={29} fill="currentColor" />
-              </button>
-
-              <div>
-                <div className="text-sm font-bold">
-                  รายการเพลง
-                </div>
-
-                <div className="text-xs text-[#a34f78]/40">
-                  TDH48 Music Library
-                </div>
-              </div>
-            </div>
-
-            {/* รายการเพลง */}
-            <div className="border-b border-[#e9c8d8]/10 pb-3 text-xs text-[#765568]/40">
-              <div className="grid grid-cols-[35px_1fr_55px] px-4">
-                <span>#</span>
-                <span>ชื่อเพลง</span>
-                <span className="text-right">เวลา</span>
-              </div>
-            </div>
-
-            <div className="mt-2 space-y-1">
-              {detailTracks.map((item, index) => (
-                <button
-                  key={item.id}
-                  onClick={() => playTrack(item, detailTracks)}
-                  className={`grid w-full grid-cols-[35px_1fr_55px] items-center rounded-xl px-4 py-4 text-left transition hover:bg-[#e98bb5]/10 ${
-                    track?.id === item.id ? 'bg-[#e98bb5]/10' : ''
-                  }`}
-                >
-                  <span className="text-sm text-[#c45d8d]">
-                    {track?.id === item.id && playing
-                      ? '♫'
-                      : index + 1}
-                  </span>
-
-                  <span className="min-w-0">
-                    <span
-                      className={`block truncate text-sm font-semibold ${
-                        track?.id === item.id
-                          ? 'text-[#c45d8d]'
-                          : 'text-[#54384a]'
-                      }`}
-                    >
-                      {item.title}
-                    </span>
-
-                    <span className="block truncate text-xs text-[#765568]/45">
-                      {item.artist}
-                    </span>
-                  </span>
-
-                  <span className="text-right text-xs text-[#765568]/40">
-                    {item.duration_seconds
-                      ? `${Math.floor(
-                          item.duration_seconds / 60
-                        )}:${String(
-                          item.duration_seconds % 60
-                        ).padStart(2, '0')}`
-                      : '--:--'}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <>
-            {/* Featured Music Slider */}
-            {featured && (
-              <section className="relative mb-10 overflow-hidden rounded-3xl bg-gradient-to-br from-[#51263e] to-[#161016]">
-                <div className="absolute inset-0">
-                  <img
-                    key={`background-${featured.id}`}
-                    src={
-                      featured.cover_url ||
-                      '/cover-placeholder.svg'
-                    }
-                    alt=""
-                    className="h-full w-full object-cover opacity-20 blur-2xl"
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/20" />
-                </div>
-
-                <div className="relative flex min-h-[360px] flex-col items-center gap-7 p-6 md:min-h-[390px] md:flex-row md:p-12">
-                  <img
-                    key={featured.id}
-                    src={
-                      featured.cover_url ||
-                      '/cover-placeholder.svg'
-                    }
-                    alt={featured.title}
-                    className="aspect-square w-52 rounded-2xl object-cover shadow-2xl md:w-72"
-                  />
-
-                  <div className="min-w-0 flex-1 text-center md:text-left">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-pink-300/20 bg-[#e98bb5]/10 px-3 py-1 text-xs text-[#a34f78]">
-                      <Headphones size={14} />
-                      TDH48 FEATURED MUSIC
-                    </div>
-
-                    <div className="text-sm text-[#765568]/60">
-                      เพลงแนะนำ
-                    </div>
-
-                    <h1 className="mt-2 break-words text-3xl font-black md:text-6xl">
-                      {featured.title}
-                    </h1>
-
-                    <div className="mt-3 text-sm text-[#765568]/70">
-                      {featured.artist}
-                    </div>
-
-                    <div className="mt-2 text-xs text-[#765568]/45">
-                      {featured.category}
-                      {featured.album ? ` · ${featured.album}` : ''}
-                    </div>
-
-                    <div className="mt-7 flex flex-wrap justify-center gap-3 md:justify-start">
-                      <button
-                        onClick={() => playTrack(featured)}
-                        className="flex items-center gap-3 rounded-full bg-[#e98bb5] px-7 py-3 font-bold text-white shadow-lg shadow-pink-500/20 transition hover:scale-105 hover:bg-pink-300 active:scale-95"
-                      >
-                        <Play size={18} fill="currentColor" />
-                        เล่นเพลง
-                      </button>
-
-                      <button
-                        onClick={() => openTrack(featured)}
-                        className="rounded-full border border-pink-200/30 px-6 py-3 text-sm transition hover:border-pink-300/60 hover:bg-[#e98bb5]/10"
-                      >
-                        ดูรายละเอียด
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* ปุ่มเลื่อนสไลด์ */}
-                  {featuredTracks.length > 1 && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={previousFeatured}
-                        aria-label="เพลงแนะนำก่อนหน้า"
-                        className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-[#e9c8d8]/20 bg-black/40 text-[#54384a] backdrop-blur transition hover:bg-[#e98bb5] hover:text-black md:left-5"
-                      >
-                        <ChevronLeft size={22} />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={nextFeatured}
-                        aria-label="เพลงแนะนำถัดไป"
-                        className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-[#e9c8d8]/20 bg-black/40 text-[#54384a] backdrop-blur transition hover:bg-[#e98bb5] hover:text-black md:right-5"
-                      >
-                        <ChevronRight size={22} />
-                      </button>
-                    </>
-                  )}
-
-                  {/* จุดแสดงตำแหน่งสไลด์ */}
-                  {featuredTracks.length > 1 && (
-                    <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2">
-                      {featuredTracks.map((item, index) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setFeaturedIndex(index)}
-                          aria-label={`ไปเพลงแนะนำลำดับที่ ${index + 1}`}
-                          className={`h-2 rounded-full transition-all ${
-                            index === featuredIndex
-                              ? 'w-7 bg-pink-300'
-                              : 'w-2 bg-[#f8e8ef]/40 hover:bg-[#f8e8ef]/70'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {/* Discover */}
-            <section>
-              <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-                <div>
-                  <div className="text-xs font-bold tracking-[.25em] text-[#c45d8d]">
-                    DISCOVER
-                  </div>
-
-                  <h2 className="mt-2 text-2xl font-black md:text-3xl">
-                    คลังเพลง TDH48
-                  </h2>
-                </div>
-
-                {/* Search Mobile */}
-                <div className="flex items-center gap-2 rounded-full border border-pink-300/10 bg-[#f8e8ef]/5 px-4 py-3 md:hidden">
-                  <Search size={17} className="text-[#c45d8d]/60" />
-
-                  <input
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="ค้นหาเพลง..."
-                    className="w-full bg-transparent text-sm outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Categories */}
-              <div className="mb-7 flex gap-2 overflow-x-auto pb-2">
-                {cats.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCategory(c)}
-                    className={`whitespace-nowrap rounded-full px-5 py-2.5 text-xs transition ${
-                      category === c
-                        ? 'bg-[#e98bb5] font-bold text-white shadow-lg shadow-pink-500/20'
-                        : 'bg-[#f8e8ef]/10 text-[#765568]/70 hover:bg-[#e98bb5]/15 hover:text-[#a34f78]'
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-
-              {/* Music Cards */}
-              {tracks.length === 0 ? (
-                <div className="rounded-3xl border border-[#e9c8d8]/10 bg-[#f8e8ef]/5 p-12 text-center">
-                  <Disc3
-                    size={40}
-                    className="mx-auto mb-4 text-[#c45d8d]/50"
-                  />
-
-                  <h3 className="font-bold">
-                    ยังไม่มีเพลงในหมวดนี้
-                  </h3>
-
-                  <p className="mt-2 text-sm text-[#765568]/40">
-                    ลองเลือกหมวดอื่นหรือค้นหาเพลงใหม่
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                  {tracks.map((item) => (
-                    <div
-                      key={item.id}
-                      className="group min-w-0 rounded-2xl bg-[#f8e8ef]/[0.04] p-3 transition hover:bg-[#e98bb5]/[0.08]"
-                    >
-                      <button
-                        onClick={() => openTrack(item)}
-                        className="block w-full text-left"
-                      >
-                        <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f8e8ef]/10">
-                          <img
-                            src={
-                              item.cover_url ||
-                              '/cover-placeholder.svg'
-                            }
-                            alt={item.title}
-                            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                          />
-
-                          <div className="absolute bottom-3 right-3 grid h-11 w-11 translate-y-3 place-items-center rounded-full bg-[#e98bb5] text-white opacity-0 shadow-xl shadow-pink-500/30 transition group-hover:translate-y-0 group-hover:opacity-100">
-                            <Play size={19} fill="currentColor" />
-                          </div>
-                        </div>
-
-                        <div className="mt-4 truncate text-sm font-bold">
-                          {item.title}
-                        </div>
-
-                        <div className="mt-1 truncate text-xs text-[#765568]/45">
-                          {item.artist}
-                        </div>
-
-                        <div className="mt-2 truncate text-[10px] text-[#a34f78]/40">
-                          {item.category}
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => playTrack(item)}
-                        className="mt-3 w-full rounded-full border border-pink-300/20 py-2 text-xs text-[#a34f78]/80 transition hover:border-pink-300/50 hover:bg-[#e98bb5]/15 hover:text-[#75445e]"
-                      >
-                        <span className="inline-flex items-center gap-2">
-                          <Play size={12} fill="currentColor" />
-                          เล่นเพลง
-                        </span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
-      </div>
-
-      <div className="mx-auto max-w-[1600px] px-4 md:px-7"></div>
-
-      <footer className="mx-auto mt-16 max-w-[1600px] px-5 text-center text-xs text-[#a34f78]/30">
-        © {new Date().getFullYear()} TDH48 MUSIC · Made for the fans
-      </footer>
-    </main>
-  );
+       </div>
+      </section>
+      <section className="grid gap-4 md:grid-cols-2">
+       <div className="rounded-[22px] border border-[#f1d9e4] bg-white p-5 shadow-sm"><div className="mb-3 flex items-center justify-between"><h3 className="font-bold">เนื้อเพลง</h3><button onClick={()=>setShowLyrics(!showLyrics)} className="text-xs text-[#bd7597]">{showLyrics?'ซ่อน':'แสดง'}</button></div>{showLyrics&&<div className="max-h-36 overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-[#9a7186]">{track?.lyrics?.trim()||'ยังไม่มีเนื้อเพลงสำหรับเพลงนี้'}</div>}</div>
+       <div className="rounded-[22px] border border-[#f1d9e4] bg-white p-5 shadow-sm"><div className="mb-3 flex items-center justify-between"><h3 className="font-bold">เพลย์ลิสต์ของ TDH48</h3><a href="/playlists" className="text-xs text-[#bd7597]">ดูทั้งหมด <ArrowUpRight className="inline" size={13}/></a></div>{playlistNames.length?<div className="grid grid-cols-2 gap-3">{playlistNames.map(p=><a href={`/playlists/${p.id}`} key={p.id} className="flex items-center gap-2 rounded-xl bg-[#fff4f8] p-2"><img src={p.cover_url||'/cover-placeholder.svg'} className="h-10 w-10 rounded-lg object-cover" alt=""/><span className="line-clamp-2 text-xs font-semibold">{p.title}</span></a>)}</div>:<p className="text-sm text-[#b58ca0]">ดูเพลย์ลิสต์ทั้งหมดได้ที่หน้ารวมเพลย์ลิสต์</p>}</div>
+      </section>
+      <section id="library" className="rounded-[24px] border border-[#f1d9e4] bg-white p-5 shadow-sm sm:p-6">
+       <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-bold tracking-[.2em] text-[#c58ca7]">YOUR MUSIC COLLECTION</p><h2 className="mt-1 text-xl font-black">คลังเพลงทั้งหมด</h2><p className="mt-1 text-xs text-[#b58ca0]">{tracks.length} เพลง · เรียงเพลงใหม่ก่อน</p></div><select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-xl border border-[#f0d5e2] bg-[#fff8fb] px-3 py-2 text-xs"><option value="new">อัปโหลดล่าสุด</option><option value="az">ชื่อเพลง A–Z</option></select></div>
+       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">{categories.map(c=><button key={c} onClick={()=>setCategory(c)} className={`whitespace-nowrap rounded-full px-4 py-2 text-xs ${category===c?'bg-[#df80aa] font-bold text-white':'bg-[#fff1f6] text-[#a87991] hover:bg-[#f9e0eb]'}`}>{c}</button>)}</div>
+       <div className="hidden grid-cols-[36px_1fr_75px_80px] gap-3 border-b border-[#f5e4eb] px-3 pb-3 text-[10px] font-bold tracking-wider text-[#c19aae] sm:grid"><span>#</span><span>ชื่อเพลง</span><span>ความยาว</span><span className="text-right">เพิ่มคิว</span></div>
+       <div className="divide-y divide-[#f8eaf0]">{tracks.map((t,i)=><div key={t.id} className={`grid grid-cols-[28px_1fr_auto] items-center gap-3 rounded-xl px-2 py-3 transition hover:bg-[#fff6fa] sm:grid-cols-[36px_1fr_75px_80px]`}><button onClick={()=>playFrom(t)} className="text-sm text-[#c18aa5]">{track?.id===t.id&&playing?<AudioLines size={17}/>:i+1}</button><button onClick={()=>playFrom(t)} className="flex min-w-0 items-center gap-3 text-left"><img src={t.cover_url||'/cover-placeholder.svg'} className="h-11 w-11 rounded-xl object-cover" alt=""/><span className="min-w-0"><b className="block truncate text-sm text-[#70485e]">{t.title}</b><small className="block truncate text-xs text-[#b58ca0]">{t.artist}{t.album?` · ${t.album}`:''}</small></span></button><span className="hidden text-xs tabular-nums text-[#bd91a6] sm:block">{fmt(t.duration_seconds||0)}</span><button onClick={()=>addToQueue(t)} className="rounded-full border border-[#f0d5e2] p-2 text-[#bd7597] hover:bg-[#fce7f0]" title="เพิ่มเข้าคิว"><Plus size={16}/></button></div>)}</div>
+       {!tracks.length&&<p className="py-10 text-center text-sm text-[#b58ca0]">ไม่พบเพลงที่ค้นหา</p>}
+      </section>
+     </div>
+     <aside className={`${showQueue?'block':'hidden'} rounded-[24px] border border-[#f1d9e4] bg-white p-5 shadow-sm 2xl:sticky 2xl:top-5 2xl:h-fit`}><div className="mb-4 flex items-center justify-between"><div><p className="text-[10px] font-bold tracking-[.2em] text-[#c58ca7]">UP NEXT</p><h3 className="mt-1 text-lg font-black">คิวเพลง</h3></div><span className="rounded-full bg-[#fff0f6] px-3 py-1 text-xs text-[#b76d91]">{queue.length} เพลง</span></div><div className="max-h-[480px] space-y-2 overflow-y-auto">{queue.map((t,i)=><button key={t.id} onClick={()=>play(t)} className={`flex w-full items-center gap-3 rounded-xl p-2 text-left ${track?.id===t.id?'bg-[#fce7f0]':'hover:bg-[#fff6fa]'}`}><img src={t.cover_url||'/cover-placeholder.svg'} className="h-10 w-10 rounded-lg object-cover" alt=""/><span className="min-w-0 flex-1"><b className="block truncate text-xs">{t.title}</b><small className="text-[10px] text-[#b58ca0]">{t.artist}</small></span>{track?.id===t.id&&playing?<AudioLines size={15} className="text-[#c06d94]"/>:<span className="text-[10px] text-[#c19aae]">{i+1}</span>}</button>)}{!queue.length&&<p className="py-8 text-center text-xs text-[#b58ca0]">ยังไม่มีเพลงในคิว</p>}</div><div className="mt-4 border-t border-[#f5e4eb] pt-4"><p className="mb-2 text-xs font-bold">ควบคุมการเล่น</p><div className="flex items-center justify-between"><button onClick={()=>setShuffle(!shuffle)} className={`rounded-lg p-2 ${shuffle?'bg-[#fce7f0] text-[#b76d91]':'text-[#b58ca0]'}`}><Shuffle size={17}/></button><button onClick={cycleRepeat} className={`rounded-lg p-2 ${repeatMode!=='off'?'bg-[#fce7f0] text-[#b76d91]':'text-[#b58ca0]'}`}>{repeatMode==='one'?<Repeat1 size={17}/>:<Repeat size={17}/>}</button><label className="flex items-center gap-2 text-xs text-[#b58ca0]"><Volume2 size={16}/><input type="range" min="0" max="1" step=".01" value={volume} onChange={e=>setVolume(Number(e.target.value))} className="w-20 accent-[#df80aa]"/></label></div></div></aside>
+    </div>
+    <footer className="py-8 text-center text-[10px] tracking-[.2em] text-[#c39bb0]">TDH48 MUSIC PLAYER · LISTEN WITH LOVE ♡</footer>
+   </section>
+  </div>
+ </main>
 }
