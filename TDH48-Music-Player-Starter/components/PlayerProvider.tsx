@@ -10,7 +10,8 @@ import {
 } from 'react';
 
 import type { ReactNode, RefObject } from 'react';
-import type { Track } from '@/lib/types';\nimport { createClient } from '@/lib/supabase/client';
+import type { Track } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
 
 type PlayerContextType = {
   track: Track | null;
@@ -37,7 +38,11 @@ type PlayerContextType = {
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
-  const audio = useRef<HTMLAudioElement>(null);\n  const countedTrackRef = useRef<string | null>(null);\n  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);\n  if (!supabaseRef.current) supabaseRef.current = createClient();\n  const supabase = supabaseRef.current;
+  const audio = useRef<HTMLAudioElement>(null);
+  const countedTrackRef = useRef<string | null>(null);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  if (!supabaseRef.current) supabaseRef.current = createClient();
+  const supabase = supabaseRef.current;
 
   const [track, setTrack] = useState<Track | null>(null);
   const [queue, setQueueState] = useState<Track[]>([]);
@@ -195,7 +200,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         onDurationChange={(e) =>
           setDuration(e.currentTarget.duration || 0)
         }
-        onPlay={() => {\n          setPlaying(true);\n          if (track && countedTrackRef.current !== track.id) {\n            countedTrackRef.current = track.id;\n            void supabase.from('track_plays').insert({ track_id: track.id }).then(({ error }) => {\n              if (error) console.warn('Could not record track play:', error.message);\n            });\n          }\n        }}
+        onPlay={() => {
+          setPlaying(true);
+          if (track && countedTrackRef.current !== track.id) {
+            countedTrackRef.current = track.id;
+            void supabase.from('track_plays').insert({ track_id: track.id }).then(({ error }) => {
+              if (error) console.warn('Could not record track play:', error.message);
+            });
+          }
+        }}
         onPause={() => setPlaying(false)}
         onEnded={() => {
           if (repeatMode === 'one' && audio.current) {
