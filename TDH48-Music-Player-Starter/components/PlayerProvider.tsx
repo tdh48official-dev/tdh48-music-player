@@ -25,6 +25,7 @@ type PlayerContextType = {
   next: () => void;
   prev: () => void;
   setQueue: (tracks: Track[]) => void;
+  addToQueue: (track: Track) => void;
   setVolume: (volume: number) => void;
   seek: (time: number) => void;
   repeatMode: 'off' | 'all' | 'one';
@@ -49,6 +50,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const setQueue = useCallback((tracks: Track[]) => {
     setQueueState(tracks);
+  }, []);
+
+  const addToQueue = useCallback((item: Track) => {
+    setQueueState((current) => current.some((t) => t.id === item.id) ? current : [...current, item]);
   }, []);
 
   const play = useCallback((newTrack: Track) => {
@@ -167,6 +172,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         next,
         prev,
         setQueue,
+        addToQueue,
         setVolume,
         seek,
         repeatMode,
