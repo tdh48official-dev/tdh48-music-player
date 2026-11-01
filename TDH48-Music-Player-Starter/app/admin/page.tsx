@@ -292,7 +292,10 @@ export default function Admin() {
 
   async function editLyrics(t: Track) {
     if (!supabase || busy) return;
-    const lyrics = prompt('วางเนื้อเพลง (เว้นว่างเพื่อลบเนื้อเพลง)', t.lyrics || '');
+    const lyrics = prompt(
+      'วางเนื้อเพลงแบบซิงก์เวลา (LRC) ทีละบรรทัด เช่น [00:12.50]ท่อนแรก\\n[00:16.20]ท่อนถัดไป\\nใส่เวลา [นาที:วินาที.เศษวินาที] ไว้หน้าทุกบรรทัด หากไม่มีเวลา ระบบจะแสดงเป็นข้อความธรรมดา',
+      t.lyrics || ''
+    );
     if (lyrics === null) return;
     setBusy(true);
     const { error } = await supabase.from('tracks').update({ lyrics: lyrics.trim() || null }).eq('id', t.id);
