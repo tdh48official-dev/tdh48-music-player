@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {Activity,Album,ArrowUpRight,AudioLines,BookOpen,ChevronRight,Disc3,Heart,Headphones,Home,Library, ListMusic,LogIn,Music2,Pause,Play,Plus,Repeat,Repeat1,Search,Settings,ShieldCheck,Shuffle,SkipBack,SkipForward,Volume2,X} from 'lucide-react';
+import {AudioLines,Headphones,Home,Library,Music2,Pause,Play,Plus,Repeat,Repeat1,Search,Settings,ShieldCheck,Shuffle,SkipBack,SkipForward,Volume2} from 'lucide-react';
 import type {Track} from '@/lib/types';
 import {usePlayer} from './PlayerProvider';
 
@@ -8,9 +8,7 @@ const fmt=(n:number)=>!Number.isFinite(n)||n<=0?'0:00':`${Math.floor(n/60)}:${St
 export default function MusicApp({initialTracks}:{initialTracks:Track[]}){
  const {track,playing,play,toggle,next,prev,queue,setQueue,addToQueue,currentTime,duration,seek,repeatMode,setRepeatMode,shuffle,setShuffle,volume,setVolume}=usePlayer();
  const [query,setQuery]=useState(''),[category,setCategory]=useState('ทั้งหมด'),[showLyrics,setShowLyrics]=useState(true),[showQueue,setShowQueue]=useState(true),[sort,setSort]=useState('new'),[tab,setTab]=useState('เพลงทั้งหมด');
- const [playlistNames,setPlaylistNames]=useState<{id:string;title:string;cover_url:string|null}[]>([]);
  useEffect(()=>{setQueue(initialTracks)},[initialTracks,setQueue]);
- useEffect(()=>{let alive=true;import('@/lib/supabase/client').then(({createClient})=>{const db=createClient();db.from('playlists').select('id,title,cover_url').eq('is_public',true).order('created_at',{ascending:false}).limit(4).then(({data})=>{if(alive)setPlaylistNames(data||[])})});return()=>{alive=false}},[]);
  const categories=['ทั้งหมด','Single','Album','Cover','Live','Original'];
  const tracks=useMemo(()=>{const list=initialTracks.filter(t=>(category==='ทั้งหมด'||t.category===category)&&(`${t.title} ${t.artist} ${t.album||''}`.toLowerCase().includes(query.toLowerCase())));return list.sort((a,b)=>sort==='new'?new Date(b.created_at||b.release_date||0).getTime()-new Date(a.created_at||a.release_date||0).getTime():a.title.localeCompare(b.title))},[initialTracks,category,query,sort]);
  const featured=initialTracks.find(t=>t.is_featured)||initialTracks[0]||null;
@@ -24,12 +22,10 @@ export default function MusicApp({initialTracks}:{initialTracks:Track[]}){
     <nav className="space-y-1 text-sm">
      <a href="#home" className="flex items-center gap-3 rounded-xl bg-[#fce6f0] px-4 py-3 font-bold text-[#a34f78]"><Home size={17}/> หน้าแรก</a>
      <a href="#library" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Library size={17}/> คลังเพลง</a>
-     <a href="/playlists" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><ListMusic size={17}/> เพลย์ลิสต์</a>
-     <a href="/playlists#merge" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Disc3 size={17}/> รวมลิสต์เพลง</a>
      <button onClick={()=>setShowQueue(!showQueue)} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left hover:bg-[#fff0f6]"><AudioLines size={17}/> คิวเพลง</button>
     </nav>
-    <p className="mb-3 mt-9 px-3 text-[10px] font-bold tracking-[.22em] text-[#c58ca7]">ACCOUNT</p>
-    <nav className="space-y-1 text-sm"><a href="/playlists" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><LogIn size={17}/> เข้าสู่ระบบสมาชิก</a><a href="/admin/login" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><ShieldCheck size={17}/> ผู้ดูแลระบบ</a></nav>
+    <p className="mb-3 mt-9 px-3 text-[10px] font-bold tracking-[.22em] text-[#c58ca7]">ADMIN</p>
+    <nav className="space-y-1 text-sm"><a href="/admin/login" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><ShieldCheck size={17}/> ผู้ดูแลระบบ</a></nav>
     <div className="mt-auto rounded-2xl bg-gradient-to-br from-[#ffe4ef] to-[#fff4f8] p-4"><div className="mb-2 text-2xl">🎀</div><b className="text-sm">TDH48 Music</b><p className="mt-1 text-xs leading-5 text-[#a57991]">พื้นที่รวมเพลงและเสียงดนตรีที่คุณชื่นชอบ</p></div>
    </aside>
    <section className="min-w-0 flex-1 px-4 py-5 sm:px-7 lg:px-9">
@@ -45,10 +41,7 @@ export default function MusicApp({initialTracks}:{initialTracks:Track[]}){
         </div>
        </div>
       </section>
-      <section className="grid gap-4 md:grid-cols-2">
-       <div className="rounded-[22px] border border-[#f1d9e4] bg-white p-5 shadow-sm"><div className="mb-3 flex items-center justify-between"><h3 className="font-bold">เนื้อเพลง</h3><button onClick={()=>setShowLyrics(!showLyrics)} className="text-xs text-[#bd7597]">{showLyrics?'ซ่อน':'แสดง'}</button></div>{showLyrics&&<div className="max-h-36 overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-[#9a7186]">{track?.lyrics?.trim()||'ยังไม่มีเนื้อเพลงสำหรับเพลงนี้'}</div>}</div>
-       <div className="rounded-[22px] border border-[#f1d9e4] bg-white p-5 shadow-sm"><div className="mb-3 flex items-center justify-between"><h3 className="font-bold">เพลย์ลิสต์ของ TDH48</h3><a href="/playlists" className="text-xs text-[#bd7597]">ดูทั้งหมด <ArrowUpRight className="inline" size={13}/></a></div>{playlistNames.length?<div className="grid grid-cols-2 gap-3">{playlistNames.map(p=><a href={`/playlists/${p.id}`} key={p.id} className="flex items-center gap-2 rounded-xl bg-[#fff4f8] p-2"><img src={p.cover_url||'/cover-placeholder.svg'} className="h-10 w-10 rounded-lg object-cover" alt=""/><span className="line-clamp-2 text-xs font-semibold">{p.title}</span></a>)}</div>:<p className="text-sm text-[#b58ca0]">ดูเพลย์ลิสต์ทั้งหมดได้ที่หน้ารวมเพลย์ลิสต์</p>}</div>
-      </section>
+      <section className="rounded-[22px] border border-[#f1d9e4] bg-white p-5 shadow-sm"><div className="mb-3 flex items-center justify-between"><h3 className="font-bold">เนื้อเพลง</h3><button onClick={()=>setShowLyrics(!showLyrics)} className="text-xs text-[#bd7597]">{showLyrics?'ซ่อน':'แสดง'}</button></div>{showLyrics&&<div className="max-h-36 overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-[#9a7186]">{track?.lyrics?.trim()||'ยังไม่มีเนื้อเพลงสำหรับเพลงนี้'}</div>}</section>
       <section id="library" className="rounded-[24px] border border-[#f1d9e4] bg-white p-5 shadow-sm sm:p-6">
        <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-bold tracking-[.2em] text-[#c58ca7]">YOUR MUSIC COLLECTION</p><h2 className="mt-1 text-xl font-black">คลังเพลงทั้งหมด</h2><p className="mt-1 text-xs text-[#b58ca0]">{tracks.length} เพลง · เรียงเพลงใหม่ก่อน</p></div><select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-xl border border-[#f0d5e2] bg-[#fff8fb] px-3 py-2 text-xs"><option value="new">อัปโหลดล่าสุด</option><option value="az">ชื่อเพลง A–Z</option></select></div>
        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">{categories.map(c=><button key={c} onClick={()=>setCategory(c)} className={`whitespace-nowrap rounded-full px-4 py-2 text-xs ${category===c?'bg-[#df80aa] font-bold text-white':'bg-[#fff1f6] text-[#a87991] hover:bg-[#f9e0eb]'}`}>{c}</button>)}</div>
