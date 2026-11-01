@@ -58,7 +58,7 @@ export default function PlayerBar() {
       {/* Expanded Now Playing Panel */}
       {expanded && (
         <section
-          className="fixed inset-0 z-[60] overflow-y-auto bg-[#080608] text-white"
+          className="fixed inset-0 z-[60] overflow-y-auto bg-[#fff7fb] text-[#54384a]"
           aria-label="Now Playing"
         >
           {/* Background decoration */}
@@ -74,21 +74,21 @@ export default function PlayerBar() {
                 type="button"
                 onClick={() => setExpanded(false)}
                 aria-label="ย่อแผงเล่นเพลง"
-                className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/5 transition hover:bg-white/10"
+                className="grid h-11 w-11 place-items-center rounded-full border border-[#e9c8d8]/10 bg-[#f8e8ef]/5 transition hover:bg-[#f8e8ef]/10"
               >
                 <ChevronDown size={24} />
               </button>
 
               <div className="text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-pink-300">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#c45d8d]">
                   TDH48 MUSIC
                 </p>
-                <p className="mt-1 text-xs text-white/50">
+                <p className="mt-1 text-xs text-[#765568]/50">
                   Now Playing
                 </p>
               </div>
 
-              <div className="grid h-11 w-11 place-items-center text-pink-300/80">
+              <div className="grid h-11 w-11 place-items-center text-[#c45d8d]/80">
                 <Maximize2 size={20} />
               </div>
             </header>
@@ -100,7 +100,7 @@ export default function PlayerBar() {
                 <div className="relative aspect-square">
                   <div className="absolute inset-4 rounded-[2rem] bg-pink-500/25 blur-2xl" />
 
-                  <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/10 bg-[#181018] shadow-2xl shadow-pink-950/40">
+                  <div className="relative h-full w-full overflow-hidden rounded-3xl border border-[#e9c8d8]/10 bg-[#ffe8f2] shadow-2xl shadow-pink-950/40">
                     <img
                       src={track.cover_url || '/cover-placeholder.svg'}
                       alt={`ปกเพลง ${track.title}`}
@@ -111,14 +111,14 @@ export default function PlayerBar() {
 
                     {!track.cover_url && (
                       <div className="absolute inset-0 grid place-items-center">
-                        <span className="text-6xl font-black text-pink-300/60">
+                        <span className="text-6xl font-black text-[#c45d8d]/60">
                           TDH48
                         </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-pink-300/20 bg-[#171017] px-4 py-1.5 text-[10px] font-semibold tracking-[0.2em] text-pink-200">
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-pink-300/20 bg-white px-4 py-1.5 text-[10px] font-semibold tracking-[0.2em] text-[#a34f78]">
                     {playing ? 'NOW PLAYING' : 'PAUSED'}
                   </div>
                 </div>
@@ -127,7 +127,7 @@ export default function PlayerBar() {
               {/* Track details and controls */}
               <div className="mx-auto w-full max-w-lg">
                 <div className="mb-7 text-center md:text-left">
-                  <p className="mb-3 text-xs font-medium uppercase tracking-[0.25em] text-pink-300/70">
+                  <p className="mb-3 text-xs font-medium uppercase tracking-[0.25em] text-[#c45d8d]/70">
                     กำลังเล่นเพลง
                   </p>
 
@@ -135,7 +135,7 @@ export default function PlayerBar() {
                     {track.title}
                   </h1>
 
-                  <p className="mt-3 text-base text-pink-200/70 sm:text-lg">
+                  <p className="mt-3 text-base text-[#a34f78]/70 sm:text-lg">
                     {track.artist}
                   </p>
                 </div>
@@ -156,7 +156,7 @@ export default function PlayerBar() {
                     }}
                   />
 
-                  <div className="mt-2 flex justify-between text-xs tabular-nums text-white/45">
+                  <div className="mt-2 flex justify-between text-xs tabular-nums text-[#765568]/45">
                     <span>{formatTime(currentTime)}</span>
                     <span>{formatTime(duration)}</span>
                   </div>
@@ -168,7 +168,7 @@ export default function PlayerBar() {
                     type="button"
                     onClick={prev}
                     aria-label="เพลงก่อนหน้า"
-                    className="text-white/65 transition hover:scale-110 hover:text-pink-300"
+                    className="text-[#765568]/65 transition hover:scale-110 hover:text-[#c45d8d]"
                   >
                     <SkipBack size={28} fill="currentColor" />
                   </button>
@@ -177,7 +177,7 @@ export default function PlayerBar() {
                     type="button"
                     onClick={toggle}
                     aria-label={playing ? 'หยุดเพลง' : 'เล่นเพลง'}
-                    className="grid h-16 w-16 place-items-center rounded-full bg-pink-400 text-[#210914] shadow-xl shadow-pink-500/25 transition hover:scale-105 hover:bg-pink-300 active:scale-95"
+                    className="grid h-16 w-16 place-items-center rounded-full bg-[#e98bb5] text-white shadow-xl shadow-pink-500/25 transition hover:scale-105 hover:bg-pink-300 active:scale-95"
                   >
                     {playing ? (
                       <Pause size={28} fill="currentColor" />
@@ -190,24 +190,24 @@ export default function PlayerBar() {
                     type="button"
                     onClick={next}
                     aria-label="เพลงถัดไป"
-                    className="text-white/65 transition hover:scale-110 hover:text-pink-300"
+                    className="text-[#765568]/65 transition hover:scale-110 hover:text-[#c45d8d]"
                   >
                     <SkipForward size={28} fill="currentColor" />
                   </button>
                 </div>
 
                 <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <button type="button" onClick={cycleRepeat} aria-label="เปลี่ยนโหมดเล่นซ้ำ" className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs transition ${repeatMode !== 'off' ? 'border-pink-300/50 bg-pink-400/15 text-pink-200' : 'border-white/10 text-white/50 hover:text-pink-200'}`}>
+                  <button type="button" onClick={cycleRepeat} aria-label="เปลี่ยนโหมดเล่นซ้ำ" className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs transition ${repeatMode !== 'off' ? 'border-pink-300/50 bg-[#e98bb5]/15 text-[#a34f78]' : 'border-[#e9c8d8]/10 text-[#765568]/50 hover:text-[#a34f78]'}`}>
                     {repeatMode === 'one' ? <Repeat1 size={16}/> : <Repeat size={16}/>}
                     {repeatMode === 'off' ? 'เล่นปกติ' : repeatMode === 'all' ? 'เล่นวนทั้งคิว' : 'เล่นวนเพลงนี้'}
                   </button>
-                  <button type="button" onClick={() => setShowLyrics((v) => !v)} className="flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs text-white/70 hover:border-pink-300/40 hover:text-pink-200">
+                  <button type="button" onClick={() => setShowLyrics((v) => !v)} className="flex items-center gap-2 rounded-full border border-[#e9c8d8]/10 px-4 py-2 text-xs text-[#765568]/70 hover:border-pink-300/40 hover:text-[#a34f78]">
                     <Captions size={16}/> {showLyrics ? 'ซ่อนเนื้อเพลง' : 'เนื้อเพลง'}
                   </button>
                 </div>
-                {showLyrics && <section className="mt-4 max-h-64 overflow-y-auto rounded-2xl border border-pink-300/15 bg-white/5 p-5 text-center">
-                  <h2 className="mb-3 text-sm font-bold text-pink-200">เนื้อเพลง · {track.title}</h2>
-                  {track.lyrics?.trim() ? <p className="whitespace-pre-wrap text-sm leading-8 text-white/80">{track.lyrics}</p> : <p className="text-sm text-white/40">ยังไม่มีเนื้อเพลงสำหรับเพลงนี้</p>}
+                {showLyrics && <section className="mt-4 max-h-64 overflow-y-auto rounded-2xl border border-pink-300/15 bg-[#f8e8ef]/5 p-5 text-center">
+                  <h2 className="mb-3 text-sm font-bold text-[#a34f78]">เนื้อเพลง · {track.title}</h2>
+                  {track.lyrics?.trim() ? <p className="whitespace-pre-wrap text-sm leading-8 text-[#765568]/80">{track.lyrics}</p> : <p className="text-sm text-[#765568]/40">ยังไม่มีเนื้อเพลงสำหรับเพลงนี้</p>}
                 </section>}
 
                 {/* Volume */}
@@ -216,7 +216,7 @@ export default function PlayerBar() {
                     type="button"
                     onClick={() => setVolume(volume > 0 ? 0 : 0.8)}
                     aria-label={volume === 0 ? 'เปิดเสียง' : 'ปิดเสียง'}
-                    className="text-white/60 transition hover:text-pink-300"
+                    className="text-[#765568]/60 transition hover:text-[#c45d8d]"
                   >
                     {volume === 0 ? (
                       <VolumeX size={20} />
@@ -236,14 +236,14 @@ export default function PlayerBar() {
                     className="h-1 w-full max-w-56 cursor-pointer accent-pink-400"
                   />
 
-                  <span className="w-9 text-right text-xs tabular-nums text-white/40">
+                  <span className="w-9 text-right text-xs tabular-nums text-[#765568]/40">
                     {Math.round(volume * 100)}%
                   </span>
                 </div>
               </div>
             </div>
 
-            <footer className="pb-2 text-center text-[10px] tracking-[0.2em] text-white/25">
+            <footer className="pb-2 text-center text-[10px] tracking-[0.2em] text-[#765568]/25">
               TDH48 MUSIC PLAYER
             </footer>
           </div>
@@ -251,7 +251,7 @@ export default function PlayerBar() {
       )}
 
       {/* Compact sticky player bar */}
-      <footer className="fixed bottom-0 left-0 right-0 z-50 border-t border-pink-400/20 bg-[#080808]/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-white backdrop-blur-2xl">
+      <footer className="fixed bottom-0 left-0 right-0 z-50 border-t border-pink-400/20 bg-[#f8e8ef]/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-[#54384a] backdrop-blur-2xl">
         <div className="mx-auto flex max-w-[1600px] items-center gap-3">
           {/* Clicking the song details opens the expanded panel */}
           <button
@@ -270,7 +270,7 @@ export default function PlayerBar() {
               <span className="block truncate text-sm font-semibold">
                 {track.title}
               </span>
-              <span className="mt-0.5 block truncate text-xs text-pink-200/60">
+              <span className="mt-0.5 block truncate text-xs text-[#a34f78]/60">
                 {track.artist}
               </span>
             </span>
@@ -283,7 +283,7 @@ export default function PlayerBar() {
                 type="button"
                 onClick={prev}
                 aria-label="เพลงก่อนหน้า"
-                className="text-white/60 transition hover:scale-110 hover:text-pink-300"
+                className="text-[#765568]/60 transition hover:scale-110 hover:text-[#c45d8d]"
               >
                 <SkipBack size={19} fill="currentColor" />
               </button>
@@ -292,7 +292,7 @@ export default function PlayerBar() {
                 type="button"
                 onClick={toggle}
                 aria-label={playing ? 'หยุดเพลง' : 'เล่นเพลง'}
-                className="grid h-11 w-11 place-items-center rounded-full bg-pink-400 text-[#210914] shadow-lg shadow-pink-500/25 transition hover:scale-105 hover:bg-pink-300 active:scale-95"
+                className="grid h-11 w-11 place-items-center rounded-full bg-[#e98bb5] text-white shadow-lg shadow-pink-500/25 transition hover:scale-105 hover:bg-pink-300 active:scale-95"
               >
                 {playing ? (
                   <Pause size={20} fill="currentColor" />
@@ -305,7 +305,7 @@ export default function PlayerBar() {
                 type="button"
                 onClick={next}
                 aria-label="เพลงถัดไป"
-                className="text-white/60 transition hover:scale-110 hover:text-pink-300"
+                className="text-[#765568]/60 transition hover:scale-110 hover:text-[#c45d8d]"
               >
                 <SkipForward size={19} fill="currentColor" />
               </button>
@@ -313,7 +313,7 @@ export default function PlayerBar() {
 
             {/* Desktop seek bar */}
             <div className="hidden w-full max-w-[600px] items-center gap-3 md:flex">
-              <span className="w-10 text-right text-[11px] text-white/50">
+              <span className="w-10 text-right text-[11px] text-[#765568]/50">
                 {formatTime(currentTime)}
               </span>
 
@@ -328,7 +328,7 @@ export default function PlayerBar() {
                 className="h-1 flex-1 cursor-pointer accent-pink-400"
               />
 
-              <span className="w-10 text-[11px] text-white/50">
+              <span className="w-10 text-[11px] text-[#765568]/50">
                 {formatTime(duration)}
               </span>
             </div>
@@ -340,7 +340,7 @@ export default function PlayerBar() {
               type="button"
               onClick={() => setVolume(volume > 0 ? 0 : 0.8)}
               aria-label={volume === 0 ? 'เปิดเสียง' : 'ปิดเสียง'}
-              className="hidden text-white/60 transition hover:text-pink-300 sm:block"
+              className="hidden text-[#765568]/60 transition hover:text-[#c45d8d] sm:block"
             >
               {volume === 0 ? (
                 <VolumeX size={18} />
@@ -364,7 +364,7 @@ export default function PlayerBar() {
               type="button"
               onClick={() => setExpanded(true)}
               aria-label="เปิด Now Playing"
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-pink-300"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#765568]/60 transition hover:bg-[#f8e8ef]/10 hover:text-[#c45d8d]"
             >
               <Maximize2 size={18} />
             </button>
@@ -373,7 +373,7 @@ export default function PlayerBar() {
 
         {/* Mobile seek bar */}
         <div className="mt-2 flex items-center gap-2 md:hidden">
-          <span className="w-8 text-[10px] tabular-nums text-white/50">
+          <span className="w-8 text-[10px] tabular-nums text-[#765568]/50">
             {formatTime(currentTime)}
           </span>
 
@@ -388,7 +388,7 @@ export default function PlayerBar() {
             className="h-1 flex-1 cursor-pointer accent-pink-400"
           />
 
-          <span className="w-8 text-right text-[10px] tabular-nums text-white/50">
+          <span className="w-8 text-right text-[10px] tabular-nums text-[#765568]/50">
             {formatTime(duration)}
           </span>
         </div>
