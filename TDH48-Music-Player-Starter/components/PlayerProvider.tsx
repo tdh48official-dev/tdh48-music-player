@@ -37,7 +37,7 @@ type PlayerContextType = {
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
-  const audio = useRef<HTMLAudioElement>(null);\n  const countedTrackRef = useRef<string | null>(null);\n  const supabase = createClient();
+  const audio = useRef<HTMLAudioElement>(null);\n  const countedTrackRef = useRef<string | null>(null);\n  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);\n  if (!supabaseRef.current) supabaseRef.current = createClient();\n  const supabase = supabaseRef.current;
 
   const [track, setTrack] = useState<Track | null>(null);
   const [queue, setQueueState] = useState<Track[]>([]);
