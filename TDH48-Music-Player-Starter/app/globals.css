@@ -1,9 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-:root{color-scheme:dark}
+:root{color-scheme:light}
 *{box-sizing:border-box}
-body{margin:0;background:#17111f;color:#fff;font-family:Arial,Helvetica,sans-serif}
-button,input,select{font:inherit}
-.glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(16px)}
-.soft-gradient{background:radial-gradient(ellipse at 75% 0%,rgba(177,107,217,.28),transparent 45%),linear-gradient(135deg,#24152f,#17111f 65%)}
+html{background:#fff7fb}
+body{margin:0;background:radial-gradient(ellipse at 12% 0%,#ffe2ef 0%,transparent 42%),linear-gradient(135deg,#fff8fc,#fff0f6 55%,#fff9fc);color:#54384a;font-family:Arial,Helvetica,sans-serif}
+button,input,select,textarea{font:inherit}
+.glass{background:rgba(255,255,255,.78);border:1px solid #f0d4e1;backdrop-filter:blur(16px);box-shadow:0 8px 28px rgba(181,91,135,.07)}
+.soft-gradient{background:radial-gradient(ellipse at 75% 0%,rgba(255,190,218,.55),transparent 45%),linear-gradient(135deg,#fff0f6,#fff7fb 65%)}
+::selection{background:#f4bfd6;color:#54384a}
