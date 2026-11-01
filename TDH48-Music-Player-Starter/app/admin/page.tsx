@@ -7,6 +7,7 @@ import type { Track } from '@/lib/types';
 
 import { createClient } from '@/lib/supabase/client';
 import OfficialPlaylistsAdmin from '@/components/OfficialPlaylistsAdmin';
+import AdminSongRequests from '@/components/AdminSongRequests';
 
 import {
   Upload,
@@ -287,6 +288,21 @@ export default function Admin() {
     } finally {
       setBusy(false);
     }
+  }
+
+
+  async function editLyrics(t: Track) {
+    if (!supabase || busy) return;
+    const lyrics = prompt('วางเนื้อเพลง (เว้นว่างเพื่อลบเนื้อเพลง)', t.lyrics || '');
+    if (lyrics === null) return;
+    setBusy(true);
+    const { error } = await supabase.from('tracks').update({ lyrics: lyrics.trim() || null }).eq('id', t.id);
+    if (error) setMsg(error.message);
+    else {
+      setTracks(current => current.map(item => item.id === t.id ? { ...item, lyrics: lyrics.trim() || null } : item));
+      setMsg('บันทึกเนื้อเพลงแล้ว');
+    }
+    setBusy(false);
   }
 
   // เปิดหรือปิดสถานะเพลงแนะนำ
@@ -651,6 +667,11 @@ export default function Admin() {
                       <Pencil size={17} />
                     </button>
 
+
+                    <button onClick={() => editLyrics(t)} disabled={busy} title="จัดการเนื้อเพลง" className="rounded-lg px-2 py-2 text-xs text-pink-200 hover:bg-white/10 disabled:opacity-40">
+                      เนื้อเพลง
+                    </button>
+
                     <button
                       onClick={() => remove(t)}
                       disabled={busy}
@@ -679,6 +700,7 @@ export default function Admin() {
         </div>
 
         <OfficialPlaylistsAdmin />
+        <AdminSongRequests />
       </div>
     </main>
   );
