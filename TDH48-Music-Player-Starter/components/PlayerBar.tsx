@@ -108,8 +108,13 @@ export default function PlayerBar() {
                 </p>
               </div>
 
-              <div className="grid h-11 w-11 place-items-center text-[#c45d8d]/80">
-                <Maximize2 size={20} />
+              <div className="flex items-center justify-end">
+                <button type="button" onClick={() => setShowLyrics((visible) => !visible)} aria-label={showLyrics ? 'ซ่อนเนื้อเพลง' : 'แสดงเนื้อเพลง'} title={showLyrics ? 'ซ่อนเนื้อเพลง' : 'แสดงเนื้อเพลง'} className="grid h-11 w-11 place-items-center rounded-full border border-pink-200 bg-white/70 text-[#a34f78] shadow-sm transition hover:bg-pink-50 md:hidden">
+                  <Captions size={20} />
+                </button>
+                <div className="hidden h-11 w-11 place-items-center text-[#c45d8d]/80 md:grid">
+                  <Maximize2 size={20} />
+                </div>
               </div>
             </header>
 
@@ -153,7 +158,7 @@ export default function PlayerBar() {
                 </div>
               </div>
               {showLyrics && (
-                <section className="relative flex h-auto min-h-[50vh] flex-col overflow-hidden rounded-3xl border border-pink-200/50 bg-white/55 px-4 pb-16 pt-5 shadow-sm md:h-full md:min-h-0" aria-label="เนื้อเพลง Now Playing">
+                <section className="relative flex h-auto min-h-[25vh] max-h-[28vh] flex-col overflow-hidden rounded-3xl border border-pink-200/50 bg-white/55 px-4 pb-16 pt-5 shadow-sm md:h-full md:min-h-0 md:max-h-none" aria-label="เนื้อเพลง Now Playing">
                   <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-[#c45d8d]/65">เนื้อเพลง</p>
                   <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth px-2 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]">
                     {!track.lyrics?.trim() ? (
@@ -168,10 +173,10 @@ export default function PlayerBar() {
                       <p className="whitespace-pre-wrap break-words py-5 text-center text-base leading-8 text-[#e6a6c7]">{track.lyrics}</p>
                     )}
                   </div>
-                  <button type="button" onClick={() => setShowLyrics(false)} aria-label="ซ่อนเนื้อเพลง" title="ซ่อนเนื้อเพลง" className="absolute bottom-4 right-4 grid h-11 w-11 place-items-center rounded-full border border-pink-200 bg-white text-[#a34f78] shadow-md transition hover:bg-pink-50"><Captions size={20}/></button>
+                  <button type="button" onClick={() => setShowLyrics(false)} aria-label="ซ่อนเนื้อเพลง" title="ซ่อนเนื้อเพลง" className="absolute bottom-4 right-4 hidden h-11 w-11 place-items-center md:grid rounded-full border border-pink-200 bg-white text-[#a34f78] shadow-md transition hover:bg-pink-50"><Captions size={20}/></button>
                 </section>
               )}
-              {!showLyrics && <button type="button" onClick={() => setShowLyrics(true)} className="fixed bottom-8 right-8 z-[70] grid h-12 w-12 place-items-center rounded-full border border-pink-200 bg-white text-[#a34f78] shadow-lg transition hover:bg-pink-50" aria-label="แสดงเนื้อเพลง" title="แสดงเนื้อเพลง"><Captions size={21}/></button>}
+              {!showLyrics && <button type="button" onClick={() => setShowLyrics(true)} className="fixed bottom-8 right-8 z-[70] hidden h-12 w-12 place-items-center md:grid rounded-full border border-pink-200 bg-white text-[#a34f78] shadow-lg transition hover:bg-pink-50" aria-label="แสดงเนื้อเพลง" title="แสดงเนื้อเพลง"><Captions size={21}/></button>}
             </div>
 
             <footer className="shrink-0 pb-1 text-center text-[10px] tracking-[0.2em] text-[#765568]/25">
