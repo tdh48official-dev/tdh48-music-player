@@ -199,6 +199,7 @@ export default function PlayerBar() {
                     {repeatMode === 'one' ? <Repeat1 size={16}/> : <Repeat size={16}/>}
                     {repeatMode === 'off' ? 'เล่นปกติ' : repeatMode === 'all' ? 'เล่นวนทั้งคิว' : 'เล่นวนเพลงนี้'}
                   </button>
+                </div>
                 {/* Volume */}
                 <div className="mt-9 flex items-center gap-3">
                   <button

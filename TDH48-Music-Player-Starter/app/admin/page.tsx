@@ -36,6 +36,20 @@ export default function Admin() {
   const [featured, setFeatured] = useState(false);
 
   const [busy, setBusy] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editArtist, setEditArtist] = useState('TDH48');
+  const [editCategory, setEditCategory] = useState('Single');
+  const [editAlbum, setEditAlbum] = useState('');
+  const [editReleaseDate, setEditReleaseDate] = useState('');
+  const [editFeatured, setEditFeatured] = useState(false);
+  const [editPublished, setEditPublished] = useState(true);
+  const [editLyricsText, setEditLyricsText] = useState('');
+  const [editAudio, setEditAudio] = useState<File | null>(null);
+  const [editCover, setEditCover] = useState<File | null>(null);
+  const [removeEditCover, setRemoveEditCover] = useState(false);
+  const [editConfirm, setEditConfirm] = useState<'save' | 'cancel' | null>(null);
+  const [editBusy, setEditBusy] = useState(false);
 
   // สร้าง Supabase Client หลังจากเปิดหน้าเว็บบน Browser
   useEffect(() => {
@@ -253,42 +267,88 @@ export default function Admin() {
     }
   }
 
-  // แก้ไขข้อมูลเพลง
-  async function edit(t: Track) {
-    if (!supabase || busy) return;
+  // เปิดหน้าต่างแก้ไขข้อมูลเพลงเดิม
+  function edit(t: Track) {
+    if (!supabase || busy || editBusy) return;
+    setEditingTrack(t);
+    setEditTitle(t.title || '');
+    setEditArtist(t.artist || '');
+    setEditCategory(t.category || 'Single');
+    setEditAlbum(t.album || '');
+    setEditReleaseDate(t.release_date || '');
+    setEditFeatured(Boolean(t.is_featured));
+    setEditPublished(t.published !== false);
+    setEditLyricsText(t.lyrics || '');
+    setEditAudio(null);
+    setEditCover(null);
+    setRemoveEditCover(false);
+    setEditConfirm(null);
+  }
 
-    const nextTitle = prompt('ชื่อเพลง', t.title);
-    if (nextTitle === null) return;
+  async function saveEdit() {
+    if (!supabase || !editingTrack || editBusy) return;
+    if (!editTitle.trim()) {
+      setMsg('กรุณาระบุชื่อเพลง');
+      setEditConfirm(null);
+      return;
+    }
 
-    const nextArtist = prompt('ศิลปิน', t.artist);
-    if (nextArtist === null) return;
-
-    const nextAlbum = prompt('ชื่ออัลบั้ม', t.album || '');
-    if (nextAlbum === null) return;
-
-    setBusy(true);
-
+    setEditBusy(true);
+    setMsg('กำลังบันทึกการแก้ไขเพลง...');
     try {
-      const { error } = await supabase
-        .from('tracks')
-        .update({
-          title: nextTitle,
-          artist: nextArtist,
-          album: nextAlbum || null,
-        })
-        .eq('id', t.id);
+      let audioUrl = editingTrack.audio_url;
+      let durationSeconds = editingTrack.duration_seconds ?? null;
+      let coverUrl = removeEditCover ? null : editingTrack.cover_url;
+
+      if (editAudio) {
+        const duration = await readAudioDuration(editAudio);
+        const audioPath = `${Date.now()}-${editAudio.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const upload = await supabase.storage.from('tdh48-audio').upload(audioPath, editAudio);
+        if (upload.error) throw upload.error;
+        audioUrl = supabase.storage.from('tdh48-audio').getPublicUrl(audioPath).data.publicUrl;
+        durationSeconds = duration;
+      }
+
+      if (editCover) {
+        const coverPath = `${Date.now()}-${editCover.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const upload = await supabase.storage.from('tdh48-covers').upload(coverPath, editCover);
+        if (upload.error) throw upload.error;
+        coverUrl = supabase.storage.from('tdh48-covers').getPublicUrl(coverPath).data.publicUrl;
+      }
+
+      const { error } = await supabase.from('tracks').update({
+        title: editTitle.trim(),
+        artist: editArtist.trim() || 'TDH48',
+        category: editCategory,
+        album: editAlbum.trim() || null,
+        release_date: editReleaseDate || null,
+        audio_url: audioUrl,
+        cover_url: coverUrl,
+        duration_seconds: durationSeconds,
+        is_featured: editFeatured,
+        published: editPublished,
+        lyrics: editLyricsText.trim() || null,
+      }).eq('id', editingTrack.id);
 
       if (error) throw error;
 
-      setMsg('แก้ไขข้อมูลเพลงเรียบร้อยแล้ว');
+      setMsg('บันทึกการแก้ไขเพลงเรียบร้อยแล้ว');
+      setEditingTrack(null);
+      setEditConfirm(null);
       await load();
     } catch (error) {
-      setMsg(error instanceof Error ? error.message : 'แก้ไขเพลงไม่สำเร็จ');
+      console.error('Edit track error:', error);
+      setMsg(error instanceof Error ? error.message : 'บันทึกการแก้ไขเพลงไม่สำเร็จ');
+      setEditConfirm(null);
     } finally {
-      setBusy(false);
+      setEditBusy(false);
     }
   }
 
+  function requestCancelEdit() {
+    if (editBusy) return;
+    setEditConfirm('cancel');
+  }
 
   async function editLyrics(t: Track) {
     if (!supabase || busy) return;
@@ -700,6 +760,99 @@ export default function Admin() {
           </section>
 
         </div>
+
+        {editingTrack && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-track-title">
+            <section className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-fuchsia-200/20 bg-[#171020] p-5 shadow-2xl sm:p-7">
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs tracking-[.2em] text-fuchsia-200">EDIT TRACK</p>
+                  <h2 id="edit-track-title" className="mt-1 text-2xl font-black">แก้ไขข้อมูลเพลง</h2>
+                  <p className="mt-1 text-sm text-white/50">แก้ไขเพลงเดิมโดยไม่สร้างรายการเพลงใหม่</p>
+                </div>
+                <button type="button" onClick={requestCancelEdit} disabled={editBusy} aria-label="ปิดหน้าต่างแก้ไข" className="rounded-xl border border-white/10 p-2 text-white/70 hover:bg-white/10 disabled:opacity-40">
+                  <span className="text-xl leading-none">×</span>
+                </button>
+              </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); setEditConfirm('save'); }} className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="text-sm">ชื่อเพลง *</label>
+                    <input required value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-3 outline-none focus:border-fuchsia-200/60" />
+                  </div>
+                  <div>
+                    <label className="text-sm">ศิลปิน</label>
+                    <input value={editArtist} onChange={(e) => setEditArtist(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-3 outline-none focus:border-fuchsia-200/60" />
+                  </div>
+                  <div>
+                    <label className="text-sm">ประเภท / หมวดหมู่</label>
+                    <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#21172b] px-3 py-3">
+                      <option>Single</option><option>Album</option><option>Cover</option><option>Live</option><option>Original</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm">ชื่ออัลบั้ม</label>
+                    <input value={editAlbum} onChange={(e) => setEditAlbum(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-3 outline-none focus:border-fuchsia-200/60" />
+                  </div>
+                  <div>
+                    <label className="text-sm">วันที่เผยแพร่</label>
+                    <input type="date" value={editReleaseDate} onChange={(e) => setEditReleaseDate(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#21172b] px-3 py-3" />
+                  </div>
+                  <div className="flex flex-col justify-end gap-3 rounded-xl border border-white/10 p-3">
+                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editFeatured} onChange={(e) => setEditFeatured(e.target.checked)} className="accent-fuchsia-300" /> เพลงแนะนำ</label>
+                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editPublished} onChange={(e) => setEditPublished(e.target.checked)} className="accent-fuchsia-300" /> เผยแพร่บนหน้าเว็บ</label>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 p-4">
+                    <label className="text-sm font-semibold">ไฟล์เสียงใหม่ (ไม่บังคับ)</label>
+                    <p className="mt-1 text-xs text-white/45">หากไม่เลือก ระบบจะใช้ไฟล์เสียงเดิม</p>
+                    <input type="file" accept="audio/*" onChange={(e) => setEditAudio(e.target.files?.[0] || null)} className="mt-3 w-full text-xs text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-200 file:px-3 file:py-2 file:font-bold file:text-purple-950" />
+                    {editAudio && <p className="mt-2 break-all text-xs text-fuchsia-200">เลือกแล้ว: {editAudio.name}</p>}
+                  </div>
+                  <div className="rounded-xl border border-white/10 p-4">
+                    <label className="text-sm font-semibold">ภาพปกใหม่ (ไม่บังคับ)</label>
+                    <p className="mt-1 text-xs text-white/45">หากไม่เลือก ระบบจะใช้ภาพปกเดิม</p>
+                    <input type="file" accept="image/*" onChange={(e) => { setEditCover(e.target.files?.[0] || null); setRemoveEditCover(false); }} className="mt-3 w-full text-xs text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-200 file:px-3 file:py-2 file:font-bold file:text-purple-950" />
+                    {editingTrack.cover_url && <label className="mt-3 flex items-center gap-2 text-xs text-rose-200"><input type="checkbox" checked={removeEditCover} onChange={(e) => { setRemoveEditCover(e.target.checked); if (e.target.checked) setEditCover(null); }} /> ลบภาพปกเดิม</label>}
+                    {editCover && <p className="mt-2 break-all text-xs text-fuchsia-200">เลือกแล้ว: {editCover.name}</p>}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm">เนื้อเพลง / เนื้อเพลงแบบ LRC</label>
+                  <textarea rows={6} value={editLyricsText} onChange={(e) => setEditLyricsText(e.target.value)} placeholder="[00:12.50]ตัวอย่างเนื้อเพลง" className="mt-2 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-3 outline-none focus:border-fuchsia-200/60" />
+                </div>
+
+                <div className="flex flex-col-reverse gap-3 border-t border-white/10 pt-5 sm:flex-row sm:justify-end">
+                  <button type="button" onClick={requestCancelEdit} disabled={editBusy} className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold hover:bg-white/5 disabled:opacity-40">× ยกเลิก / ปิด</button>
+                  <button type="submit" disabled={editBusy} className="flex items-center justify-center gap-2 rounded-xl bg-fuchsia-200 px-5 py-3 text-sm font-bold text-purple-950 disabled:opacity-50"><Upload size={16} /> บันทึกการแก้ไข</button>
+                </div>
+              </form>
+            </section>
+          </div>
+        )}
+
+        {editConfirm && editingTrack && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" role="alertdialog" aria-modal="true">
+            <section className="w-full max-w-md rounded-2xl border border-fuchsia-200/20 bg-[#21172b] p-6 shadow-2xl">
+              <h3 className="text-lg font-bold">{editConfirm === 'save' ? 'ยืนยันการบันทึก?' : 'ยืนยันการยกเลิก?'}</h3>
+              <p className="mt-2 text-sm leading-6 text-white/65">
+                {editConfirm === 'save'
+                  ? `ต้องการบันทึกการเปลี่ยนแปลงของเพลง “${editTitle.trim() || editingTrack.title}” ใช่หรือไม่?`
+                  : 'ต้องการยกเลิกการแก้ไขหรือไม่? ข้อมูลที่แก้ไว้แต่ยังไม่บันทึกจะหายไป'}
+              </p>
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setEditConfirm(null)} disabled={editBusy} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm hover:bg-white/5">ไม่ใช่ / กลับไปแก้ไข</button>
+                <button type="button" onClick={() => editConfirm === 'save' ? void saveEdit() : (setEditingTrack(null), setEditConfirm(null))} disabled={editBusy} className={`rounded-xl px-4 py-2.5 text-sm font-bold disabled:opacity-50 ${editConfirm === 'save' ? 'bg-fuchsia-200 text-purple-950' : 'bg-rose-300 text-rose-950'}`}>
+                  {editBusy ? 'กำลังดำเนินการ...' : editConfirm === 'save' ? 'ยืนยันบันทึก' : 'ยืนยันยกเลิก'}
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
 
         <OfficialPlaylistsAdmin />
       </div>

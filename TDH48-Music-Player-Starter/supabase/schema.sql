@@ -24,10 +24,14 @@ create table if not exists public.tracks (
   cover_url text,
   duration_seconds integer,
   release_date date,
+  lyrics text,
   is_featured boolean not null default false,
   published boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+-- Ensure existing Supabase projects also have the lyrics column.
+alter table public.tracks add column if not exists lyrics text;
 
 alter table public.profiles enable row level security;
 alter table public.tracks enable row level security;
