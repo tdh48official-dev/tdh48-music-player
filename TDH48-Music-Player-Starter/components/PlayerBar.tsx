@@ -78,7 +78,7 @@ export default function PlayerBar() {
       {/* Expanded Now Playing Panel */}
       {expanded && (
         <section
-          className="fixed inset-0 z-[60] overflow-hidden bg-[#fff7fb] text-[#54384a]"
+          className="fixed inset-0 z-[60] overflow-y-auto overscroll-y-contain bg-[#fff7fb] text-[#54384a] md:overflow-hidden"
           aria-label="Now Playing"
         >
           {/* Background decoration */}
@@ -87,7 +87,7 @@ export default function PlayerBar() {
             <div className="absolute bottom-[-150px] right-[-100px] h-[320px] w-[320px] rounded-full bg-fuchsia-600/10 blur-[100px]" />
           </div>
 
-          <div className="relative mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col px-5 pb-5 pt-4 sm:px-8">
+          <div className="relative mx-auto flex h-auto min-h-full w-full max-w-6xl flex-col px-4 pb-28 pt-4 sm:px-8 md:h-full md:min-h-0 md:pb-5">
             {/* Panel header */}
             <header className="flex items-center justify-between">
               <button
@@ -114,14 +114,14 @@ export default function PlayerBar() {
             </header>
 
             {/* Main content: player on the left, synchronized lyrics on the right */}
-            <div className={`grid min-h-0 flex-1 items-stretch gap-6 overflow-hidden py-4 md:gap-8 md:py-5 ${showLyrics ? 'md:grid-cols-2' : 'md:grid-cols-1 justify-items-center'}`}>
-              <div className="mx-auto flex min-h-0 w-full max-w-xl flex-col justify-center gap-3 sm:gap-4">
+            <div className={`grid min-h-0 flex-none grid-cols-1 items-start gap-6 overflow-visible py-4 md:flex-1 md:items-stretch md:overflow-hidden md:py-5 md:gap-8 ${showLyrics ? 'md:grid-cols-2' : 'md:grid-cols-1 md:justify-items-center'}`}>
+              <div className="mx-auto flex min-h-0 w-full max-w-xl flex-col justify-start gap-3 sm:gap-4 md:justify-center">
                 <div className="px-2 text-center">
                   <p className="mb-2 text-xs font-medium uppercase tracking-[0.25em] text-[#c45d8d]/70">กำลังเล่นเพลง</p>
                   <h1 className="break-words text-2xl font-bold leading-tight sm:text-4xl">{track.title}</h1>
                   <p className="mt-2 text-base text-[#a34f78]/70 sm:text-lg">{track.artist}</p>
                 </div>
-                <div className="mx-auto w-full max-w-[min(54vh,360px)] md:max-w-[min(48vh,400px)]">
+                <div className="mx-auto w-full max-w-[min(32vh,260px)] sm:max-w-[min(42vh,320px)] md:max-w-[min(48vh,400px)]">
                   <div className="relative aspect-square">
                     <div className="absolute inset-4 rounded-[2rem] bg-pink-500/25 blur-2xl" />
                     <div className="relative h-full w-full overflow-hidden rounded-3xl border border-[#e9c8d8]/10 bg-[#ffe8f2] shadow-2xl shadow-pink-950/20">
@@ -153,7 +153,7 @@ export default function PlayerBar() {
                 </div>
               </div>
               {showLyrics && (
-                <section className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-pink-200/50 bg-white/55 px-4 pb-16 pt-5 shadow-sm" aria-label="เนื้อเพลง Now Playing">
+                <section className="relative flex h-auto min-h-[50vh] flex-col overflow-hidden rounded-3xl border border-pink-200/50 bg-white/55 px-4 pb-16 pt-5 shadow-sm md:h-full md:min-h-0" aria-label="เนื้อเพลง Now Playing">
                   <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-[#c45d8d]/65">เนื้อเพลง</p>
                   <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth px-2 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]">
                     {!track.lyrics?.trim() ? (
