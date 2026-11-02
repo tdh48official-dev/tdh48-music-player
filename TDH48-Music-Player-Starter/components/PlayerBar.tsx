@@ -60,12 +60,12 @@ export default function PlayerBar() {
   const [expanded, setExpanded] = useState(false);
   const [showLyrics, setShowLyrics] = useState(true);
   const activeLyricRef = useRef<HTMLParagraphElement | null>(null);
-  useEffect(() => {
-    if (expanded && showLyrics && activeLyricRef.current) activeLyricRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [expanded, showLyrics, activeLyricIndex, track?.id]);
   const cycleRepeat = () => setRepeatMode(repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off');
   const timedLyrics = parseLyrics(track?.lyrics);
   const activeLyricIndex = timedLyrics.reduce((active, line, index) => line.time <= currentTime ? index : active, -1);
+  useEffect(() => {
+    if (expanded && showLyrics && activeLyricRef.current) activeLyricRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [expanded, showLyrics, activeLyricIndex, track?.id]);
 
   if (!track) return null;
 
