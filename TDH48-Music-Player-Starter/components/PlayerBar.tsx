@@ -114,7 +114,7 @@ export default function PlayerBar() {
             </header>
 
             {/* Main content: player on the left, synchronized lyrics on the right */}
-            <div className={`grid min-h-0 flex-1 items-stretch gap-6 overflow-hidden py-4 md:grid-cols-2 md:gap-8 md:py-5 ${showLyrics ? '' : 'md:grid-cols-1'}`}>
+            <div className={`grid min-h-0 flex-1 items-stretch gap-6 overflow-hidden py-4 md:gap-8 md:py-5 ${showLyrics ? 'md:grid-cols-2' : 'md:grid-cols-1 justify-items-center'}`}>
               <div className="mx-auto flex min-h-0 w-full max-w-xl flex-col justify-center gap-3 sm:gap-4">
                 <div className="px-2 text-center">
                   <p className="mb-2 text-xs font-medium uppercase tracking-[0.25em] text-[#c45d8d]/70">กำลังเล่นเพลง</p>
