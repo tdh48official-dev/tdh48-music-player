@@ -7,6 +7,7 @@ import type { Track } from '@/lib/types';
 
 import { createClient } from '@/lib/supabase/client';
 import OfficialPlaylistsAdmin from '@/components/OfficialPlaylistsAdmin';
+import LyricsTimestampEditor from '@/components/LyricsTimestampEditor';
 
 import {
   Upload,
@@ -44,7 +45,7 @@ export default function Admin() {
   const [editReleaseDate, setEditReleaseDate] = useState('');
   const [editFeatured, setEditFeatured] = useState(false);
   const [editPublished, setEditPublished] = useState(true);
-  const [editLyricsText, setEditLyricsText] = useState('');
+  const [lyricsTrack, setLyricsTrack] = useState<Track | null>(null);
   const [editAudio, setEditAudio] = useState<File | null>(null);
   const [editCover, setEditCover] = useState<File | null>(null);
   const [removeEditCover, setRemoveEditCover] = useState(false);
@@ -278,7 +279,6 @@ export default function Admin() {
     setEditReleaseDate(t.release_date || '');
     setEditFeatured(Boolean(t.is_featured));
     setEditPublished(t.published !== false);
-    setEditLyricsText(t.lyrics || '');
     setEditAudio(null);
     setEditCover(null);
     setRemoveEditCover(false);
@@ -327,7 +327,6 @@ export default function Admin() {
         duration_seconds: durationSeconds,
         is_featured: editFeatured,
         published: editPublished,
-        lyrics: editLyricsText.trim() || null,
       }).eq('id', editingTrack.id);
 
       if (error) throw error;
@@ -348,23 +347,6 @@ export default function Admin() {
   function requestCancelEdit() {
     if (editBusy) return;
     setEditConfirm('cancel');
-  }
-
-  async function editLyrics(t: Track) {
-    if (!supabase || busy) return;
-    const lyrics = prompt(
-      'วางเนื้อเพลงแบบซิงก์เวลา (LRC) ทีละบรรทัด เช่น [00:12.50]ท่อนแรก\\n[00:16.20]ท่อนถัดไป\\nใส่เวลา [นาที:วินาที.เศษวินาที] ไว้หน้าทุกบรรทัด หากไม่มีเวลา ระบบจะแสดงเป็นข้อความธรรมดา',
-      t.lyrics || ''
-    );
-    if (lyrics === null) return;
-    setBusy(true);
-    const { error } = await supabase.from('tracks').update({ lyrics: lyrics.trim() || null }).eq('id', t.id);
-    if (error) setMsg(error.message);
-    else {
-      setTracks(current => current.map(item => item.id === t.id ? { ...item, lyrics: lyrics.trim() || null } : item));
-      setMsg('บันทึกเนื้อเพลงแล้ว');
-    }
-    setBusy(false);
   }
 
   // เปิดหรือปิดสถานะเพลงแนะนำ
@@ -730,8 +712,8 @@ export default function Admin() {
                     </button>
 
 
-                    <button onClick={() => editLyrics(t)} disabled={busy} title="จัดการเนื้อเพลง" className="rounded-lg px-2 py-2 text-xs text-pink-200 hover:bg-white/10 disabled:opacity-40">
-                      เนื้อเพลง
+                    <button type="button" onClick={() => setLyricsTrack(t)} disabled={busy || !supabase} title="เปิดระบบแก้ไขเนื้อเพลงและประทับเวลา" className="rounded-lg px-2 py-2 text-xs text-pink-200 hover:bg-white/10 disabled:opacity-40">
+                      เนื้อเพลง / จับเวลา
                     </button>
 
                     <button
@@ -821,11 +803,6 @@ export default function Admin() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-sm">เนื้อเพลง / เนื้อเพลงแบบ LRC</label>
-                  <textarea rows={6} value={editLyricsText} onChange={(e) => setEditLyricsText(e.target.value)} placeholder="[00:12.50]ตัวอย่างเนื้อเพลง" className="mt-2 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-3 outline-none focus:border-fuchsia-200/60" />
-                </div>
-
                 <div className="flex flex-col-reverse gap-3 border-t border-white/10 pt-5 sm:flex-row sm:justify-end">
                   <button type="button" onClick={requestCancelEdit} disabled={editBusy} className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold hover:bg-white/5 disabled:opacity-40">× ยกเลิก / ปิด</button>
                   <button type="submit" disabled={editBusy} className="flex items-center justify-center gap-2 rounded-xl bg-fuchsia-200 px-5 py-3 text-sm font-bold text-purple-950 disabled:opacity-50"><Upload size={16} /> บันทึกการแก้ไข</button>
@@ -852,6 +829,18 @@ export default function Admin() {
               </div>
             </section>
           </div>
+        )}
+
+        {lyricsTrack && supabase && (
+          <LyricsTimestampEditor
+            track={lyricsTrack}
+            supabase={supabase}
+            onClose={() => setLyricsTrack(null)}
+            onSaved={(trackId, lyrics) => {
+              setTracks((current) => current.map((item) => item.id === trackId ? { ...item, lyrics } : item));
+              setMsg('บันทึกเนื้อเพลงเรียบร้อยแล้ว');
+            }}
+          />
         )}
 
         <OfficialPlaylistsAdmin />

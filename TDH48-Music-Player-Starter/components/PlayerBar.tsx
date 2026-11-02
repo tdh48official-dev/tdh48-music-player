@@ -13,9 +13,24 @@ import {
   VolumeX,
   Repeat,
   Repeat1,
+  Captions,
 } from 'lucide-react';
 
 import { usePlayer } from './PlayerProvider';
+
+type TimedLyric = { time: number; text: string };
+
+function parseLyrics(value: string | null | undefined): TimedLyric[] {
+  if (!value) return [];
+  const rows: TimedLyric[] = [];
+  for (const line of value.split(/\r?\n/)) {
+    const matches = [...line.matchAll(/\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\]/g)];
+    if (!matches.length) continue;
+    const text = line.replace(/\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\]/g, '').trim();
+    for (const match of matches) rows.push({ time: Number(match[1]) * 60 + Number(match[2]), text });
+  }
+  return rows.sort((a, b) => a.time - b.time);
+}
 
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -43,7 +58,10 @@ export default function PlayerBar() {
   } = usePlayer();
 
   const [expanded, setExpanded] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
   const cycleRepeat = () => setRepeatMode(repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off');
+  const timedLyrics = parseLyrics(track?.lyrics);
+  const activeLyricIndex = timedLyrics.reduce((active, line, index) => line.time <= currentTime ? index : active, -1);
 
   if (!track) return null;
 
@@ -200,6 +218,35 @@ export default function PlayerBar() {
                     {repeatMode === 'off' ? 'เล่นปกติ' : repeatMode === 'all' ? 'เล่นวนทั้งคิว' : 'เล่นวนเพลงนี้'}
                   </button>
                 </div>
+                {/* Lyrics viewer */}
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowLyrics((visible) => !visible)}
+                    aria-expanded={showLyrics}
+                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${showLyrics ? 'border-pink-300/60 bg-[#e98bb5]/20 text-[#a34f78]' : 'border-[#e9c8d8]/30 text-[#765568]/70 hover:bg-white/60'}`}
+                  >
+                    <Captions size={16} /> {showLyrics ? 'ซ่อนเนื้อเพลง' : 'ดูเนื้อเพลง'}
+                  </button>
+                  {showLyrics && (
+                    <section className="mt-3 max-h-64 overflow-y-auto rounded-2xl border border-pink-200/40 bg-white/70 p-4" aria-label="เนื้อเพลง Now Playing">
+                      {!track.lyrics?.trim() ? (
+                        <p className="py-5 text-center text-sm text-[#a34f78]/70">ยังไม่มีเนื้อเพลงสำหรับเพลงนี้</p>
+                      ) : timedLyrics.length ? (
+                        <div className="space-y-3 text-center">
+                          {timedLyrics.map((line, index) => (
+                            <p key={index} className={`whitespace-pre-wrap break-words text-sm leading-6 transition-all ${index === activeLyricIndex ? 'scale-[1.02] font-bold text-[#a34f78]' : 'text-[#765568]/55'}`}>
+                              {line.text}
+                            </p>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words text-center text-sm leading-7 text-[#765568]">{track.lyrics}</p>
+                      )}
+                    </section>
+                  )}
+                </div>
+
                 {/* Volume */}
                 <div className="mt-9 flex items-center gap-3">
                   <button
