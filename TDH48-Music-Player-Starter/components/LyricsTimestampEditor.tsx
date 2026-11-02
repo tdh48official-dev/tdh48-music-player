@@ -54,7 +54,7 @@ export default function LyricsTimestampEditor({ track, supabase, onClose, onSave
   }, []);
 
   async function startCapture() {
-    const prepared = draft.split(/\r?\n/).map((text) => ({ text: text.trimEnd(), time: null }));
+    const prepared = draft.split(/\r?\n/).map((text) => text.trimEnd()).filter((text) => text.trim()).map((text) => ({ text, time: null as number | null }));
     if (!prepared.some((line) => line.text.trim())) {
       setMessage('กรุณาใส่เนื้อเพลงอย่างน้อย 1 บรรทัดก่อนกดเริ่ม');
       return;
@@ -224,7 +224,7 @@ export default function LyricsTimestampEditor({ track, supabase, onClose, onSave
         {message && <p className="mt-4 break-words text-sm text-pink-100" role="status">{message}</p>}
         <footer className="mt-6 flex flex-col-reverse gap-3 border-t border-white/10 pt-5 sm:flex-row sm:justify-end">
           <button type="button" onClick={() => { if (audioRef.current) audioRef.current.pause(); onClose(); }} disabled={saving} className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold hover:bg-white/5 disabled:opacity-50">ปิด</button>
-          <button type="button" onClick={() => void saveLyrics()} disabled={saving} className="flex items-center justify-center gap-2 rounded-xl bg-pink-200 px-5 py-3 text-sm font-bold text-purple-950 disabled:opacity-50"><Save size={17} /> {saving ? 'กำลังบันทึก...' : 'บันทึกเนื้อเพลง'}</button>
+          <button type="button" onClick={() => void saveLyrics()} disabled={saving || (started && stampedCount < lines.length)} title={started && stampedCount < lines.length ? "กรุณาประทับเวลาให้ครบทุกบรรทัดก่อนบันทึก" : undefined} className="flex items-center justify-center gap-2 rounded-xl bg-pink-200 px-5 py-3 text-sm font-bold text-purple-950 disabled:opacity-50"><Save size={17} /> {saving ? 'กำลังบันทึก...' : started && stampedCount < lines.length ? 'จับเวลาให้ครบก่อนบันทึก' : 'บันทึกเนื้อเพลง'}</button>
         </footer>
       </section>
     </div>
