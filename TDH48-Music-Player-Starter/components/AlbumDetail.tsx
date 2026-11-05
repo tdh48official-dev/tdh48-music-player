@@ -1,5 +1,6 @@
 'use client';
 import {useMemo} from 'react';
+import Link from 'next/link';
 import {ArrowLeft,Play,Pause,Shuffle,AudioLines} from 'lucide-react';
 import type {Track} from '@/lib/types';
 import {usePlayer} from '@/components/PlayerProvider';
@@ -11,7 +12,7 @@ export default function AlbumDetail({albumName,tracks}:{albumName:string;tracks:
  const playAlbum=()=>{setQueue(tracks);play(tracks[0]);};
  return <main className="min-h-screen bg-[#fff7fb] px-4 pb-40 pt-5 text-[#654458] sm:px-8">
   <div className="mx-auto max-w-5xl">
-   <a href="/" className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#f0d5e2] bg-white px-4 py-2 text-sm font-semibold text-[#a45d80] shadow-sm"><ArrowLeft size={17}/> กลับหน้าแรก</a>
+   <Link href="/" className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#f0d5e2] bg-white px-4 py-2 text-sm font-semibold text-[#a45d80] shadow-sm"><ArrowLeft size={17}/> กลับหน้าแรก</Link>
    <section className="relative overflow-hidden rounded-[28px] border border-[#f0d5e2] bg-white shadow-sm">
     <div className="absolute inset-0 opacity-20 blur-3xl" style={{backgroundImage:`url("${cover}")`,backgroundSize:'cover',backgroundPosition:'center'}}/>
     <div className="relative flex flex-col gap-6 bg-gradient-to-b from-[#ffe6f0]/90 to-white/95 p-5 sm:flex-row sm:items-end sm:p-8">
