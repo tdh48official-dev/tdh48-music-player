@@ -26,6 +26,7 @@ export default function MusicApp({initialTracks,initialPlayCounts}:{initialTrack
  const categories=['ทั้งหมด','Single','Album','Cover','Live','Original'];
  const tracks=useMemo(()=>{const list=initialTracks.filter(t=>(category==='ทั้งหมด'||t.category===category)&&(`${t.title} ${t.artist} ${t.album||''}`.toLowerCase().includes(query.toLowerCase())));return list.sort((a,b)=>sort==='new'?new Date(b.created_at||b.release_date||0).getTime()-new Date(a.created_at||a.release_date||0).getTime():a.title.localeCompare(b.title))},[initialTracks,category,query,sort]);
  const recommended=useMemo(()=>{const picks=initialTracks.filter(t=>t.is_featured);return (picks.length?picks:initialTracks).slice(0,8)},[initialTracks]);
+ const featured=recommended[0]||initialTracks[0]||null;
  const topSongs=useMemo(()=>initialTracks.map(t=>({...t,play_count:initialPlayCounts.find(p=>p.track_id===t.id)?.play_count||0})).filter(t=>t.play_count>0).sort((a,b)=>b.play_count-a.play_count).slice(0,10),[initialTracks,initialPlayCounts]);
  const playFrom=(t:Track)=>{setQueue(tracks.length?tracks:initialTracks);play(t)};
  const cycleRepeat=()=>setRepeatMode(repeatMode==='off'?'all':repeatMode==='all'?'one':'off');
