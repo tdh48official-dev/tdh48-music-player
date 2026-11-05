@@ -2,6 +2,7 @@ import { PlayerProvider } from '@/components/PlayerProvider';
 import PlayerBar from '@/components/PlayerBar';
 import MusicApp from '@/components/MusicApp';
 import MemberLogin from '@/components/MemberLogin';
+import SessionActivityGuard from '@/components/SessionActivityGuard';
 import { createClient } from '@/lib/supabase/server';
 import type { Track } from '@/lib/types';
 
@@ -49,9 +50,11 @@ export default async function Home() {
   }
 
   return (
-    <PlayerProvider>
-      <MusicApp initialTracks={tracks} initialPlayCounts={playCounts} />
-      <PlayerBar />
-    </PlayerProvider>
+    <SessionActivityGuard>
+      <PlayerProvider>
+        <MusicApp initialTracks={tracks} initialPlayCounts={playCounts} />
+        <PlayerBar />
+      </PlayerProvider>
+    </SessionActivityGuard>
   );
 }
