@@ -200,13 +200,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         onDurationChange={(e) =>
           setDuration(e.currentTarget.duration || 0)
         }
-        onPlay={() => {
+        onPlay={async () => {
           setPlaying(true);
           if (track && countedTrackRef.current !== track.id) {
             countedTrackRef.current = track.id;
-            void supabase.from('track_plays').insert({ track_id: track.id }).then(({ error }) => {
-              if (error) console.warn('Could not record track play:', error.message);
+            const { data: { user } } = await supabase.auth.getUser();
+            const { error } = await supabase.from('track_plays').insert({
+              track_id: track.id,
+              user_id: user?.id ?? null,
             });
+            if (error) console.warn('Could not record track play:', error.message);
           }
         }}
         onPause={() => setPlaying(false)}
