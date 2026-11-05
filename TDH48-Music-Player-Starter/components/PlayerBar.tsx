@@ -25,7 +25,8 @@ type TimedLyric = { time: number; text: string };
 function parseLyrics(value: string | null | undefined): TimedLyric[] {
   if (!value) return [];
   const rows: TimedLyric[] = [];
-  for (const line of value.split(/\r?\n/)) {
+  for (const line of value.split(/\r?
+/)) {
     const matches = [...line.matchAll(/\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\]/g)];
     if (!matches.length) continue;
     const text = line.replace(/\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\]/g, '').trim();
@@ -128,7 +129,8 @@ export default function PlayerBar() {
                 <div className="px-2 text-center">
                   <p className="mb-2 text-xs font-medium uppercase tracking-[0.25em] text-[#c45d8d]/70">กำลังเล่นเพลง</p>
                   <h1 className="break-words text-2xl font-bold leading-tight sm:text-4xl">{track.title}</h1>
-                  <p className="mt-2 text-base text-[#a34f78]/70 sm:text-lg">{track.artist}</p>\n                  <button type="button" onClick={() => toggleFavorite(track.id)} aria-label={liked ? "นำออกจากเพลงที่ถูกใจ" : "เพิ่มเพลงที่ถูกใจ"} className={`mx-auto mt-3 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${liked ? "border-pink-300 bg-pink-100 text-[#bd477d]" : "border-pink-200 bg-white/70 text-[#a34f78] hover:bg-pink-50"}`}><Heart size={17} fill={liked ? "currentColor" : "none"}/>{liked ? "ถูกใจแล้ว" : "ถูกใจเพลงนี้"}</button>
+                  <p className="mt-2 text-base text-[#a34f78]/70 sm:text-lg">{track.artist}</p>
+                  <button type="button" onClick={() => toggleFavorite(track.id)} aria-label={liked ? "นำออกจากเพลงที่ถูกใจ" : "เพิ่มเพลงที่ถูกใจ"} className={`mx-auto mt-3 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${liked ? "border-pink-300 bg-pink-100 text-[#bd477d]" : "border-pink-200 bg-white/70 text-[#a34f78] hover:bg-pink-50"}`}><Heart size={17} fill={liked ? "currentColor" : "none"}/>{liked ? "ถูกใจแล้ว" : "ถูกใจเพลงนี้"}</button>
                 </div>
                 <div className="mx-auto w-full max-w-[min(32vh,260px)] sm:max-w-[min(42vh,320px)] md:max-w-[min(48vh,400px)]">
                   <div className="relative aspect-square">
