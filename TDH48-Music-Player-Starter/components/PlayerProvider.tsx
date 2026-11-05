@@ -209,7 +209,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
               track_id: track.id,
               user_id: user?.id ?? null,
             });
-            if (error) console.warn('Could not record track play:', error.message);
+            if (error) {
+              console.warn('Could not record track play:', error.message);
+            } else if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('tdh48:track-played', { detail: { trackId: track.id } }));
+            }
           }
         }}
         onPause={() => setPlaying(false)}
