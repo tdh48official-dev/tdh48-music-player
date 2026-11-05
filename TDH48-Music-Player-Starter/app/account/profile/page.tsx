@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ArrowLeft, Camera, LogOut, Save, UserRound } from 'lucide-react';
 
@@ -70,7 +71,7 @@ export default function ProfileSettingsPage() {
   return <main className="min-h-screen bg-[#fff7fb] px-4 py-10 text-[#654458]">
     <section className="mx-auto max-w-xl rounded-[28px] border border-[#f1d9e4] bg-white p-6 shadow-xl shadow-pink-100/60 sm:p-9">
       <header className="mb-8 flex items-center justify-between">
-        <a href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#a34f78]"><ArrowLeft size={17}/> กลับหน้าหลัก</a>
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#a34f78]"><ArrowLeft size={17}/> กลับหน้าหลัก</Link>
         <button onClick={signOut} className="inline-flex items-center gap-2 text-sm text-[#b58ca0] hover:text-[#9c5275]"><LogOut size={16}/> ออกจากระบบ</button>
       </header>
       <div className="mb-7 flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fce6f0] text-[#a34f78]"><UserRound/></span><div><h1 className="text-2xl font-black">ตั้งค่าโปรไฟล์</h1><p className="text-sm text-[#b58ca0]">จัดการชื่อและรูปโปรไฟล์ส่วนตัว</p></div></div>
