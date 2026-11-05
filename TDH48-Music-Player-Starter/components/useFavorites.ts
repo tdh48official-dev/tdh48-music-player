@@ -5,19 +5,22 @@ import { createClient } from '@/lib/supabase/client';
 
 export function useFavorites() {
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);\n  const [loaded, setLoaded] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
     const supabase = createClient();
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!active) return;\n      if (!user) { setLoaded(true); return; }
+      if (!active) return;
+      if (!user) { setLoaded(true); return; }
       setUserId(user.id);
       const { data, error } = await supabase.from('favorites').select('track_id').eq('user_id', user.id);
       if (!active) return;
-      if (error) { console.warn('Could not load favorites:', error.message); return; }
+      if (error) { console.warn('Could not load favorites:', error.message); setLoaded(true); return; }
       setFavoriteIds((data || []).map(row => row.track_id));
+      setLoaded(true);
     })();
     const onChanged = (event: Event) => {
       const detail = (event as CustomEvent<{trackId:string;isFavorite:boolean}>).detail;
