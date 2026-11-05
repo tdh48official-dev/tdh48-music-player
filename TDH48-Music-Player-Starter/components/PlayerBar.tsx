@@ -25,8 +25,7 @@ type TimedLyric = { time: number; text: string };
 function parseLyrics(value: string | null | undefined): TimedLyric[] {
   if (!value) return [];
   const rows: TimedLyric[] = [];
-  for (const line of value.split(/\r?
-/)) {
+  for (const line of value.split(/\r?\n/)) {
     const matches = [...line.matchAll(/\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\]/g)];
     if (!matches.length) continue;
     const text = line.replace(/\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\]/g, '').trim();
