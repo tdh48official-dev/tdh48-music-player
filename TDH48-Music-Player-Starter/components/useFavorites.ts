@@ -5,14 +5,14 @@ import { createClient } from '@/lib/supabase/client';
 
 export function useFavorites() {
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);\n  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
     const supabase = createClient();
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!active || !user) return;
+      if (!active) return;\n      if (!user) { setLoaded(true); return; }
       setUserId(user.id);
       const { data, error } = await supabase.from('favorites').select('track_id').eq('user_id', user.id);
       if (!active) return;
@@ -46,5 +46,5 @@ export function useFavorites() {
     window.dispatchEvent(new CustomEvent('tdh48:favorites-changed', { detail: { trackId, isFavorite: !wasFavorite } }));
   }, [favoriteIds, userId]);
 
-  return { favoriteIds, isFavorite: (id: string) => favoriteIds.includes(id), toggleFavorite };
+  return { favoriteIds, loaded, isFavorite: (id: string) => favoriteIds.includes(id), toggleFavorite };
 }
