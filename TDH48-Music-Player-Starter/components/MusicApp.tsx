@@ -4,7 +4,6 @@ import Link from 'next/link';
 import {AudioLines,Home,Play,Repeat,Repeat1,Shuffle,Volume2,Settings,UserRound,Clock3,Heart} from 'lucide-react';
 import type {Track} from '@/lib/types';
 import {usePlayer} from './PlayerProvider';
-import {useFavorites} from './useFavorites';
 
 const fmt=(n:number)=>!Number.isFinite(n)||n<=0?'0:00':`${Math.floor(n/60)}:${String(Math.floor(n%60)).padStart(2,'0')}`;
 
@@ -54,7 +53,6 @@ export default function MusicApp({initialTracks,initialPlayCounts}:{initialTrack
  useEffect(()=>{setQueue(initialTracks)},[initialTracks,setQueue]);
  useEffect(()=>{let active=true;const onTrackPlayed=(event:Event)=>{const trackId=(event as CustomEvent<{trackId:string}>).detail?.trackId;if(trackId)setRecentIds(current=>[trackId,...current.filter(id=>id!==trackId)].slice(0,40));};window.addEventListener('tdh48:track-played',onTrackPlayed);(async()=>{const supabase=(await import('@/lib/supabase/client')).createClient();const {data:{user},error:authError}=await supabase.auth.getUser();if(authError)console.warn('Could not load member:',authError.message);if(!user||!active)return;setUserId(user.id);const [profile,history]=await Promise.all([supabase.from('profiles').select('display_name,avatar_url').eq('id',user.id).maybeSingle(),supabase.from('track_plays').select('track_id,played_at').eq('user_id',user.id).order('played_at',{ascending:false}).limit(40)]);if(!active)return;if(profile.error)console.warn('Could not load profile:',profile.error.message);if(history.error)console.warn('Could not load listening history:',history.error.message);setProfileName(profile.data?.display_name||String(user.user_metadata?.display_name||user.email?.split('@')[0]||'สมาชิก'));setAvatarUrl(profile.data?.avatar_url||'');setRecentIds([...new Set((history.data||[]).map(x=>x.track_id))]);setHistoryLoaded(true);})();return()=>{active=false;window.removeEventListener('tdh48:track-played',onTrackPlayed)}},[]);
  useEffect(()=>{if(!userId||!initialTracks.length||!historyLoaded)return;const day=new Date().toLocaleDateString('en-CA');const key='tdh48_daily_recommendations:'+userId+':'+day;try{const cached=localStorage.getItem(key);if(cached){const ids=JSON.parse(cached) as string[];const restored=ids.map(id=>initialTracks.find(t=>t.id===id)).filter((t):t is Track=>Boolean(t));if(restored.length){setDailyRecommendations(restored);return;}}}catch{}const picks=dailyPicks(initialTracks,recentIds,userId,day,initialPlayCounts);setDailyRecommendations(picks);try{localStorage.setItem(key,JSON.stringify(picks.map(t=>t.id)));}catch{}},[userId,initialTracks,recentIds,initialPlayCounts,historyLoaded]);
- const {favoriteIds,toggleFavorite}=useFavorites();
  const topSongs=useMemo(()=>initialTracks.map(t=>({...t,play_count:initialPlayCounts.find(p=>p.track_id===t.id)?.play_count||0})).filter(t=>t.play_count>0).sort((a,b)=>b.play_count-a.play_count),[initialTracks,initialPlayCounts]);
  const playFrom=(t:Track)=>{setQueue(initialTracks);play(t)};
  const cycleRepeat=()=>setRepeatMode(repeatMode==='off'?'all':repeatMode==='all'?'one':'off');
