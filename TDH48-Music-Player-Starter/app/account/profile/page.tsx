@@ -44,8 +44,12 @@ export default function ProfileSettingsPage() {
         if (uploadError) throw uploadError;
         nextAvatar = supabase.storage.from('tdh48-avatars').getPublicUrl(path).data.publicUrl;
       }
-      const { error } = await supabase.from('profiles').update({ display_name: name.trim(), avatar_url: nextAvatar }).eq('id', userId);
+      const { data: savedProfile, error } = await supabase.from('profiles').upsert(
+        { id: userId, display_name: name.trim(), avatar_url: nextAvatar },
+        { onConflict: 'id' }
+      ).select('id').single();
       if (error) throw error;
+      if (!savedProfile) throw new Error('ไม่พบข้อมูลโปรไฟล์ที่บันทึก');
       setAvatarUrl(nextAvatar);
       setPhoto(null);
       setMessage('บันทึกโปรไฟล์เรียบร้อยแล้ว');
