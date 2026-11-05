@@ -1,19 +1,25 @@
-
 import { PlayerProvider } from '@/components/PlayerProvider';
 import PlayerBar from '@/components/PlayerBar';
 import MusicApp from '@/components/MusicApp';
+import MemberLogin from '@/components/MemberLogin';
 import { createClient } from '@/lib/supabase/server';
 import type { Track } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Show the email-only member login before exposing the music library.
+  if (!user) {
+    return <MemberLogin />;
+  }
+
   let tracks: Track[] = [];
   let playCounts: { track_id: string; play_count: number }[] = [];
 
   try {
-    const supabase = await createClient();
-
     const { data, error } = await supabase
       .from('tracks')
       .select('*')
@@ -24,7 +30,6 @@ export default async function Home() {
       console.error('Home tracks fetch error:', error.message);
     } else {
       tracks = (data ?? []) as Track[];
-      console.log('Home tracks loaded:', tracks.length);
     }
 
     const { data: counts, error: countsError } = await supabase
