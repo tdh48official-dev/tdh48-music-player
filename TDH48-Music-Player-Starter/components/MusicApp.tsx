@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {AudioLines,Home,Pause,Play,Plus,Repeat,Repeat1,Shuffle,SkipBack,SkipForward,Volume2,Settings,UserRound,Clock3} from 'lucide-react';
+import {AudioLines,Home,Pause,Play,Plus,Repeat,Repeat1,Shuffle,SkipBack,SkipForward,Volume2,Settings,UserRound,Clock3,Heart} from 'lucide-react';
 import type {Track} from '@/lib/types';
 import {usePlayer} from './PlayerProvider';
 
