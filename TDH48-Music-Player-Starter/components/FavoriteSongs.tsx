@@ -9,7 +9,7 @@ import { useFavorites } from '@/components/useFavorites';
 export default function FavoriteSongs({ tracks }: { tracks: Track[] }) {
   const { track, playing, play, setQueue } = usePlayer();
   const { favoriteIds, loaded, toggleFavorite } = useFavorites();
-  const likedTracks = favoriteIds.length
+  const likedTracks = loaded
     ? favoriteIds.map(id => tracks.find(song => song.id === id)).filter((song): song is Track => Boolean(song))
     : tracks;
 
