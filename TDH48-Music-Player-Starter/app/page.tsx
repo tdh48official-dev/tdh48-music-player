@@ -1,5 +1,3 @@
-import { PlayerProvider } from '@/components/PlayerProvider';
-import PlayerBar from '@/components/PlayerBar';
 import MusicApp from '@/components/MusicApp';
 import MemberLogin from '@/components/MemberLogin';
 import SessionActivityGuard from '@/components/SessionActivityGuard';
@@ -51,10 +49,7 @@ export default async function Home() {
 
   return (
     <SessionActivityGuard>
-      <PlayerProvider>
-        <MusicApp initialTracks={tracks} initialPlayCounts={playCounts} />
-        <PlayerBar />
-      </PlayerProvider>
+      <MusicApp initialTracks={tracks} initialPlayCounts={playCounts} />
     </SessionActivityGuard>
   );
 }
