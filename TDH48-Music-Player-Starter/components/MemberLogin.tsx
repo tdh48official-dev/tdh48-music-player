@@ -26,7 +26,7 @@ export default function MemberLogin() {
         });
         if (error) throw error;
         if (data.session) window.location.reload();
-        else setMessage('สมัครสมาชิกเรียบร้อยแล้ว กรุณาเปิดอีเมลที่ใช้สมัคร แล้วกดลิงก์ยืนยันบัญชีก่อนกลับมาเข้าสู่ระบบ');
+        else setMessage('เย้! สมัครสมาชิกเรียบร้อยแล้ว 🎀 เปิดกล่องอีเมลของคุณ แล้วกดลิงก์ยืนยันสมาชิกที่เราส่งไปให้ จากนั้นกลับมาเข้าสู่ระบบเพื่อเริ่มฟังเพลงกันได้เลย!');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
@@ -54,8 +54,8 @@ export default function MemberLogin() {
         <h1 className="text-2xl font-black text-[#422638]">{mode === 'login' ? 'เข้าสู่ระบบสมาชิก' : 'สมัครสมาชิก TDH48'}</h1>
         <p className="mt-2 text-sm leading-6 text-[#765365]">
           {mode === 'login'
-            ? 'มีบัญชีสมาชิกอยู่แล้ว ให้กรอกอีเมลและรหัสผ่านที่เคยสมัครเพื่อเข้าสู่ระบบได้เลย หากยังไม่มีบัญชี ให้กด “สมัครสมาชิก” ด้านล่างก่อน'
-            : 'กรอกชื่อ อีเมลที่ใช้งานได้ และตั้งรหัสผ่านเพื่อสร้างบัญชีใหม่ หลังสมัครแล้วอย่าลืมเปิดอีเมลเพื่อยืนยันบัญชี'}
+            ? 'พร้อมกลับมาฟังเพลงโปรดแล้วหรือยัง? 💗 ถ้ามีบัญชีสมาชิกอยู่แล้ว กรอกอีเมลกับรหัสผ่านเดิมเพื่อเข้าสู่ระบบได้เลยนะ หากเพิ่งมาเป็นสมาชิกใหม่ กด “สมัครสมาชิก” เพื่อเริ่มต้นกันได้เลย!'
+            : 'มาเป็นครอบครัว TDH48 กัน! 🌸 กรอกข้อมูลให้ครบเพียงนิดเดียว แล้วไปยืนยันอีเมลเพื่อเปิดบัญชีสมาชิก พร้อมเก็บเพลงโปรดของคุณไว้ด้วยกัน'}
         </p>
         <form onSubmit={submit} className="mt-7 space-y-4">
           {mode === 'signup' && (
@@ -65,7 +65,7 @@ export default function MemberLogin() {
                 <UserRound size={17} className="shrink-0 text-[#b76f90]" />
                 <input required value={displayName} onChange={event => setDisplayName(event.target.value)} className="min-w-0 flex-1 bg-transparent py-3 font-normal text-[#38232e] outline-none placeholder:text-[#a58b98]" placeholder="เช่น ชื่อเล่นหรือชื่อที่ต้องการใช้" />
               </span>
-              <small className={fieldHint}>ใส่ชื่อที่ต้องการให้แสดงบนโปรไฟล์สมาชิก ใช้ชื่อเล่นได้ ไม่จำเป็นต้องเป็นชื่อ-นามสกุลจริง และสามารถแก้ไขภายหลังได้</small>
+              <small className={fieldHint}>ตั้งชื่อเล่นน่ารัก ๆ หรือชื่อที่อยากให้เพื่อน ๆ เห็นบนโปรไฟล์ได้เลย ไม่จำเป็นต้องใช้ชื่อจริงนะ และกลับมาเปลี่ยนได้ภายหลัง ✨</small>
             </label>
           )}
           <label className="block text-sm font-semibold text-[#563344]">
@@ -74,7 +74,7 @@ export default function MemberLogin() {
               <Mail size={17} className="shrink-0 text-[#b76f90]" />
               <input required type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} className="min-w-0 flex-1 bg-transparent py-3 font-normal text-[#38232e] outline-none placeholder:text-[#a58b98]" placeholder="you@example.com" />
             </span>
-            <small className={fieldHint}>{mode === 'signup' ? 'ใช้อีเมลจริงที่คุณเปิดอ่านได้ เพราะระบบจะส่งลิงก์ยืนยันบัญชีไปที่อีเมลนี้ หากไม่พบ ให้ตรวจสอบโฟลเดอร์ Spam/Junk ด้วย' : 'กรอกอีเมลเดียวกับที่ใช้สมัครสมาชิก ตรวจสอบตัวสะกดให้ถูกต้อง'}</small>
+            <small className={fieldHint}>{mode === 'signup' ? 'ใส่อีเมลที่ใช้งานได้และเปิดอ่านได้จริงนะ เราจะส่งจดหมายยืนยันสมาชิกไปให้ทางนั้น 💌 ถ้ายังไม่เจอ ลองแวะดูในกล่อง Spam หรือ Junk ด้วยน้า' : 'ใช้อีเมลเดียวกับวันที่สมัครสมาชิกเลยนะ เช็กตัวสะกดอีกนิด จะได้พาเข้าสู่บัญชีเพลงโปรดได้ถูกคน 💗'}</small>
           </label>
           <label className="block text-sm font-semibold text-[#563344]">
             รหัสผ่าน
@@ -82,7 +82,7 @@ export default function MemberLogin() {
               <LockKeyhole size={17} className="shrink-0 text-[#b76f90]" />
               <input required minLength={8} type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={event => setPassword(event.target.value)} className="min-w-0 flex-1 bg-transparent py-3 font-normal text-[#38232e] outline-none placeholder:text-[#a58b98]" placeholder={mode === 'login' ? 'รหัสผ่านที่ตั้งไว้ตอนสมัคร' : 'อย่างน้อย 8 ตัวอักษร'} />
             </span>
-            <small className={fieldHint}>{mode === 'signup' ? 'ตั้งรหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร แนะนำให้ผสมตัวพิมพ์เล็ก-ใหญ่ ตัวเลข และสัญลักษณ์ และเก็บไว้เป็นความลับ' : 'ใช้รหัสผ่านเดิมที่ตั้งไว้ตอนสมัคร หากเข้าไม่ได้ให้ตรวจสอบการพิมพ์และปุ่ม Caps Lock'}</small>
+            <small className={fieldHint}>{mode === 'signup' ? 'ตั้งรหัสผ่านอย่างน้อย 8 ตัวอักษรนะ แนะนำให้ผสมตัวพิมพ์เล็ก-ใหญ่ ตัวเลข หรือสัญลักษณ์ เพื่อความปลอดภัย และอย่าลืมเก็บไว้เป็นความลับของเราเอง 🔐' : 'ใส่รหัสผ่านที่ตั้งไว้ตอนสมัครได้เลย หากยังเข้าไม่ได้ ลองเช็กตัวอักษรอีกครั้งและดูว่าเปิด Caps Lock ค้างอยู่หรือเปล่าน้า'}</small>
           </label>
           <button disabled={busy} className="w-full rounded-xl bg-[#f4bfd6] py-3 font-bold text-[#563344] transition hover:bg-[#ffe2ef] disabled:opacity-50">{busy ? 'กำลังดำเนินการ...' : mode === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}</button>
         </form>
@@ -93,7 +93,7 @@ export default function MemberLogin() {
           </button>
         </p>
         {message && <p role="status" className="mt-4 rounded-xl border border-[#dfb3c7] bg-[#fff0f5] p-3 text-sm font-semibold leading-6 text-[#422638]">{message}</p>}
-        <p className="mt-6 text-center text-xs text-[#765365]">เข้าสู่ระบบด้วยอีเมลเท่านั้น · TDH48 MUSIC</p>
+        <p className="mt-6 text-center text-xs text-[#765365]">พื้นที่สมาชิก TDH48 · ใช้อีเมลเพื่อเข้าสู่ระบบ 💗</p>
       </section>
     </main>
   );
