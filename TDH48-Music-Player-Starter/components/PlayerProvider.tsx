@@ -162,6 +162,105 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   }, [volume]);
 
+  // Publish the current track to the device's native media controls
+  // (lock screen, notification shade, Control Center, and headset buttons).
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+
+    const session = navigator.mediaSession;
+    if (!track) {
+      session.metadata = null;
+      session.playbackState = 'none';
+      return;
+    }
+
+    const artworkUrl = track.cover_url
+      ? new URL(track.cover_url, window.location.origin).href
+      : new URL('/cover-placeholder.svg', window.location.origin).href;
+
+    session.metadata = new MediaMetadata({
+      title: track.title,
+      artist: track.artist,
+      album: track.album || 'TDH48 Music',
+      artwork: [
+        { src: artworkUrl, sizes: '96x96', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '128x128', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '192x192', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '256x256', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '384x384', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '512x512', type: 'image/jpeg' },
+      ],
+    });
+
+    return () => {
+      session.metadata = null;
+    };
+  }, [track]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState = !track ? 'none' : playing ? 'playing' : 'paused';
+  }, [track, playing]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+
+    const session = navigator.mediaSession;
+    const safelySetHandler = (
+      action: MediaSessionAction,
+      handler: MediaSessionActionHandler | null,
+    ) => {
+      try {
+        session.setActionHandler(action, handler);
+      } catch {
+        // Some browsers expose Media Session but do not support every action.
+      }
+    };
+
+    safelySetHandler('play', () => {
+      if (audio.current?.paused) audio.current.play().catch(() => setPlaying(false));
+    });
+    safelySetHandler('pause', () => audio.current?.pause());
+    safelySetHandler('previoustrack', prev);
+    safelySetHandler('nexttrack', next);
+    safelySetHandler('seekbackward', (details) => {
+      const offset = details.seekOffset ?? 10;
+      seek(Math.max(0, (audio.current?.currentTime ?? currentTime) - offset));
+    });
+    safelySetHandler('seekforward', (details) => {
+      const offset = details.seekOffset ?? 10;
+      seek(Math.min(duration || Infinity, (audio.current?.currentTime ?? currentTime) + offset));
+    });
+    safelySetHandler('seekto', (details) => {
+      if (typeof details.seekTime === 'number') seek(details.seekTime);
+    });
+
+    return () => {
+      safelySetHandler('play', null);
+      safelySetHandler('pause', null);
+      safelySetHandler('previoustrack', null);
+      safelySetHandler('nexttrack', null);
+      safelySetHandler('seekbackward', null);
+      safelySetHandler('seekforward', null);
+      safelySetHandler('seekto', null);
+    };
+  }, [prev, next, seek, duration, currentTime]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    if (!duration || !Number.isFinite(duration)) return;
+
+    try {
+      navigator.mediaSession.setPositionState({
+        duration,
+        playbackRate: 1,
+        position: Math.max(0, Math.min(currentTime, duration)),
+      });
+    } catch {
+      // Position state is optional and may be unavailable on older browsers.
+    }
+  }, [currentTime, duration, track]);
+
   return (
     <PlayerContext.Provider
       value={{
