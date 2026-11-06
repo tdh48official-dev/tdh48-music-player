@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Music2, Mail, LockKeyhole } from 'lucide-react';
+import { Music2, Mail, LockKeyhole, UserRound } from 'lucide-react';
 
 export default function MemberLogin() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -26,7 +26,7 @@ export default function MemberLogin() {
         });
         if (error) throw error;
         if (data.session) window.location.reload();
-        else setMessage('สมัครสมาชิกแล้ว กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชีก่อนเข้าสู่ระบบ');
+        else setMessage('สมัครสมาชิกเรียบร้อยแล้ว กรุณาเปิดอีเมลที่ใช้สมัคร แล้วกดลิงก์ยืนยันบัญชีก่อนกลับมาเข้าสู่ระบบ');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
@@ -42,24 +42,58 @@ export default function MemberLogin() {
     }
   }
 
+  const fieldHint = 'mt-1.5 block text-xs font-normal leading-5 text-[#765365]';
+
   return (
-    <main className="grid min-h-screen place-items-center bg-[#fff7fb] px-4 py-10 text-[#633d53]">
-      <section className="w-full max-w-md rounded-[28px] border border-[#f0d4e1] bg-white/90 p-7 shadow-xl shadow-[#e8b8ce]/25 sm:p-9">
+    <main className="grid min-h-screen place-items-center bg-[#fff7fb] px-4 py-10 text-[#563344]">
+      <section className="w-full max-w-md rounded-[28px] border border-[#f0d4e1] bg-white p-7 shadow-xl shadow-[#e8b8ce]/25 sm:p-9">
         <div className="mb-7 flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#ffd9e8] to-[#f4bfd6] text-[#8b526d]"><Music2 /></span>
-          <span><b className="block tracking-[.2em] text-[#9b607b]">TDH48 MUSIC</b><small className="text-[#b18a9d]">MEMBER ACCOUNT</small></span>
+          <span><b className="block tracking-[.2em] text-[#9b607b]">TDH48 MUSIC</b><small className="text-[#765365]">MEMBER ACCOUNT</small></span>
         </div>
-        <h1 className="text-2xl font-black">{mode === 'login' ? 'เข้าสู่ระบบสมาชิก' : 'สมัครสมาชิก TDH48'}</h1>
-        <p className="mt-2 text-sm leading-6 text-[#927b89]">เข้าสู่คลังเพลงและเพลย์ลิสต์ส่วนตัวด้วยอีเมลของคุณ</p>
+        <h1 className="text-2xl font-black text-[#422638]">{mode === 'login' ? 'เข้าสู่ระบบสมาชิก' : 'สมัครสมาชิก TDH48'}</h1>
+        <p className="mt-2 text-sm leading-6 text-[#765365]">
+          {mode === 'login'
+            ? 'มีบัญชีสมาชิกอยู่แล้ว ให้กรอกอีเมลและรหัสผ่านที่เคยสมัครเพื่อเข้าสู่ระบบได้เลย หากยังไม่มีบัญชี ให้กด “สมัครสมาชิก” ด้านล่างก่อน'
+            : 'กรอกชื่อ อีเมลที่ใช้งานได้ และตั้งรหัสผ่านเพื่อสร้างบัญชีใหม่ หลังสมัครแล้วอย่าลืมเปิดอีเมลเพื่อยืนยันบัญชี'}
+        </p>
         <form onSubmit={submit} className="mt-7 space-y-4">
-          {mode === 'signup' && <label className="block text-sm">ชื่อที่แสดง<input required value={displayName} onChange={event => setDisplayName(event.target.value)} className="mt-2 w-full rounded-xl border border-[#efd6e2] bg-[#fff8fc] px-4 py-3 outline-none focus:border-[#e6a9c3]" placeholder="ชื่อของคุณ" /></label>}
-          <label className="block text-sm">อีเมล<span className="mt-2 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4"><Mail size={17} className="text-[#c17d9d]" /><input required type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} className="min-w-0 flex-1 bg-transparent py-3 outline-none" placeholder="you@example.com" /></span></label>
-          <label className="block text-sm">รหัสผ่าน<span className="mt-2 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4"><LockKeyhole size={17} className="text-fuchsia-200/70" /><input required minLength={8} type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={event => setPassword(event.target.value)} className="min-w-0 flex-1 bg-transparent py-3 outline-none" placeholder="อย่างน้อย 8 ตัวอักษร" /></span></label>
-          <button disabled={busy} className="w-full rounded-xl bg-[#f4bfd6] py-3 font-bold text-[#633d53] transition hover:bg-[#ffe2ef] disabled:opacity-50">{busy ? 'กำลังดำเนินการ...' : mode === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}</button>
+          {mode === 'signup' && (
+            <label className="block text-sm font-semibold text-[#563344]">
+              ชื่อที่แสดง
+              <span className="mt-2 flex items-center gap-2 rounded-xl border border-[#e8c7d6] bg-[#fff8fc] px-4">
+                <UserRound size={17} className="shrink-0 text-[#b76f90]" />
+                <input required value={displayName} onChange={event => setDisplayName(event.target.value)} className="min-w-0 flex-1 bg-transparent py-3 font-normal text-[#38232e] outline-none placeholder:text-[#a58b98]" placeholder="เช่น ชื่อเล่นหรือชื่อที่ต้องการใช้" />
+              </span>
+              <small className={fieldHint}>ใส่ชื่อที่ต้องการให้แสดงบนโปรไฟล์สมาชิก ใช้ชื่อเล่นได้ ไม่จำเป็นต้องเป็นชื่อ-นามสกุลจริง และสามารถแก้ไขภายหลังได้</small>
+            </label>
+          )}
+          <label className="block text-sm font-semibold text-[#563344]">
+            อีเมล
+            <span className="mt-2 flex items-center gap-2 rounded-xl border border-[#e8c7d6] bg-[#fff8fc] px-4">
+              <Mail size={17} className="shrink-0 text-[#b76f90]" />
+              <input required type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} className="min-w-0 flex-1 bg-transparent py-3 font-normal text-[#38232e] outline-none placeholder:text-[#a58b98]" placeholder="you@example.com" />
+            </span>
+            <small className={fieldHint}>{mode === 'signup' ? 'ใช้อีเมลจริงที่คุณเปิดอ่านได้ เพราะระบบจะส่งลิงก์ยืนยันบัญชีไปที่อีเมลนี้ หากไม่พบ ให้ตรวจสอบโฟลเดอร์ Spam/Junk ด้วย' : 'กรอกอีเมลเดียวกับที่ใช้สมัครสมาชิก ตรวจสอบตัวสะกดให้ถูกต้อง'}</small>
+          </label>
+          <label className="block text-sm font-semibold text-[#563344]">
+            รหัสผ่าน
+            <span className="mt-2 flex items-center gap-2 rounded-xl border border-[#e8c7d6] bg-[#fff8fc] px-4">
+              <LockKeyhole size={17} className="shrink-0 text-[#b76f90]" />
+              <input required minLength={8} type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={event => setPassword(event.target.value)} className="min-w-0 flex-1 bg-transparent py-3 font-normal text-[#38232e] outline-none placeholder:text-[#a58b98]" placeholder={mode === 'login' ? 'รหัสผ่านที่ตั้งไว้ตอนสมัคร' : 'อย่างน้อย 8 ตัวอักษร'} />
+            </span>
+            <small className={fieldHint}>{mode === 'signup' ? 'ตั้งรหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร แนะนำให้ผสมตัวพิมพ์เล็ก-ใหญ่ ตัวเลข และสัญลักษณ์ และเก็บไว้เป็นความลับ' : 'ใช้รหัสผ่านเดิมที่ตั้งไว้ตอนสมัคร หากเข้าไม่ได้ให้ตรวจสอบการพิมพ์และปุ่ม Caps Lock'}</small>
+          </label>
+          <button disabled={busy} className="w-full rounded-xl bg-[#f4bfd6] py-3 font-bold text-[#563344] transition hover:bg-[#ffe2ef] disabled:opacity-50">{busy ? 'กำลังดำเนินการ...' : mode === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}</button>
         </form>
-        <p className="mt-6 text-center text-sm text-[#927b89]">{mode === 'login' ? 'ยังไม่มีบัญชี?' : 'มีบัญชีอยู่แล้ว?'}{' '}<button type="button" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setMessage(''); }} className="font-bold text-[#b76f90] hover:text-[#8b526d]">{mode === 'login' ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ'}</button></p>
-        {message && <p role="status" className="mt-4 rounded-xl border border-fuchsia-200/15 bg-fuchsia-200/10 p-3 text-sm text-fuchsia-100">{message}</p>}
-        <p className="mt-6 text-center text-xs text-[#b18a9d]">เข้าสู่ระบบด้วยอีเมลเท่านั้น · TDH48 MUSIC</p>
+        <p className="mt-6 text-center text-sm text-[#765365]">
+          {mode === 'login' ? 'ยังไม่มีบัญชี?' : 'มีบัญชีอยู่แล้ว?'}{' '}
+          <button type="button" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setMessage(''); }} className="font-bold text-[#a34f78] underline underline-offset-2 hover:text-[#8b526d]">
+            {mode === 'login' ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ'}
+          </button>
+        </p>
+        {message && <p role="status" className="mt-4 rounded-xl border border-[#dfb3c7] bg-[#fff0f5] p-3 text-sm font-semibold leading-6 text-[#422638]">{message}</p>}
+        <p className="mt-6 text-center text-xs text-[#765365]">เข้าสู่ระบบด้วยอีเมลเท่านั้น · TDH48 MUSIC</p>
       </section>
     </main>
   );
