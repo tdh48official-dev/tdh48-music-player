@@ -65,7 +65,8 @@ export default function MusicApp({initialTracks,initialPlayCounts}:{initialTrack
     <p className="mb-3 px-3 text-[10px] font-bold tracking-[.22em] text-[#c58ca7]">MENU</p>
     <nav className="space-y-1 text-sm">
      <a href="#home" className="flex items-center gap-3 rounded-xl bg-[#fce6f0] px-4 py-3 font-bold text-[#a34f78]"><Home size={17}/> หน้าแรก</a>
-     <a href="#recent" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Clock3 size={17}/> ประวัติการฟัง</a>\n     <Link href="/favorites" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Heart size={17}/> เพลงที่ถูกใจ</Link>
+     <a href="#recent" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Clock3 size={17}/> ประวัติการฟัง</a>
+     <Link href="/favorites" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Heart size={17}/> เพลงที่ถูกใจ</Link>
      <button onClick={()=>setShowQueue(!showQueue)} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left hover:bg-[#fff0f6]"><AudioLines size={17}/> คิวเพลง</button>
     </nav>
     <div className="mt-auto rounded-2xl bg-gradient-to-br from-[#ffe4ef] to-[#fff4f8] p-4"><div className="mb-2 text-2xl">🎀</div><b className="text-sm">TDH48 Music</b><p className="mt-1 text-xs leading-5 text-[#a57991]">พื้นที่รวมเพลงและเสียงดนตรีที่คุณชื่นชอบ</p></div>
