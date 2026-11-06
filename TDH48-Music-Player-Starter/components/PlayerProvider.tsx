@@ -225,11 +225,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     safelySetHandler('nexttrack', next);
     safelySetHandler('seekbackward', (details) => {
       const offset = details.seekOffset ?? 10;
-      seek(Math.max(0, (audio.current?.currentTime ?? currentTime) - offset));
+      seek(Math.max(0, (audio.current?.currentTime ?? 0) - offset));
     });
     safelySetHandler('seekforward', (details) => {
       const offset = details.seekOffset ?? 10;
-      seek(Math.min(duration || Infinity, (audio.current?.currentTime ?? currentTime) + offset));
+      seek(Math.min(duration || Infinity, (audio.current?.currentTime ?? 0) + offset));
     });
     safelySetHandler('seekto', (details) => {
       if (typeof details.seekTime === 'number') seek(details.seekTime);
@@ -244,7 +244,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       safelySetHandler('seekforward', null);
       safelySetHandler('seekto', null);
     };
-  }, [prev, next, seek, duration, currentTime]);
+  }, [prev, next, seek, duration]);
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
