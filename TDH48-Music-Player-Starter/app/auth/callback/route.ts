@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 function safeNextPath(value: string | null) {
   // Only allow same-site relative paths; never redirect to an arbitrary host.
@@ -7,7 +7,7 @@ function safeNextPath(value: string | null) {
   return value;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const next = safeNextPath(url.searchParams.get('next'));
@@ -31,17 +31,7 @@ export async function GET(request: Request) {
     {
       cookies: {
         getAll() {
-          return request.headers.get('cookie')
-            ? request.headers.get('cookie')!
-                .split(';')
-                .map((part) => {
-                  const separator = part.indexOf('=');
-                  return {
-                    name: part.slice(0, separator).trim(),
-                    value: decodeURIComponent(part.slice(separator + 1).trim()),
-                  };
-                })
-            : [];
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
