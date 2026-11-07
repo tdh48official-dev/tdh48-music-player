@@ -22,11 +22,16 @@ export default function MemberLogin() {
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { display_name: displayName.trim() } },
+          options: {
+            data: { display_name: displayName.trim() },
+            // Always send confirmation emails to the stable production domain,
+            // never to a deployment-specific Preview URL.
+            emailRedirectTo: 'https://tdh48-music-player-official.vercel.app/auth/callback?next=%2F',
+          },
         });
         if (error) throw error;
         if (data.session) window.location.reload();
-        else setMessage('สมัครเรียบร้อยแล้ว 🎀 กรุณายืนยันผ่านลิงก์ในอีเมล แล้วกลับมาเข้าสู่ระบบ');
+        else setMessage('สมัครเรียบร้อยแล้ว 🎀 กดลิงก์ยืนยันในอีเมล ระบบจะเข้าสู่ระบบให้อัตโนมัติ');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
