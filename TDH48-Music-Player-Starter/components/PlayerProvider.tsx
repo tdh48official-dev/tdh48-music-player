@@ -168,24 +168,30 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !track) return;
 
     const session = navigator.mediaSession;
-    const cover = track.cover_url
-      ? track.cover_url
+    const cover = track.cover_url?.trim()
+      ? track.cover_url.trim()
       : new URL('/tdh48-logo.png', window.location.origin).toString();
-    const imageType = /\\.png(?:[?#]|$)/i.test(cover) ? 'image/png' : 'image/jpeg';
+
+    // Infer the actual file format from the URL path (not a malformed regex
+    // against the full URL). Do not claim multiple pixel sizes for one file.
+    let imageType = 'image/png';
+    try {
+      const pathname = new URL(cover, window.location.origin).pathname.toLowerCase();
+      if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) imageType = 'image/jpeg';
+      else if (pathname.endsWith('.webp')) imageType = 'image/webp';
+      else if (pathname.endsWith('.png')) imageType = 'image/png';
+    } catch {
+      imageType = 'image/png';
+    }
 
     if (typeof MediaMetadata !== 'undefined') {
       session.metadata = new MediaMetadata({
-        title: track.title,
+        title: track.title || 'TDH48 Music',
         artist: track.artist || 'TDH48',
         album: track.album || 'TDH48 Music',
-        artwork: [
-          { src: cover, sizes: '96x96', type: imageType },
-          { src: cover, sizes: '128x128', type: imageType },
-          { src: cover, sizes: '192x192', type: imageType },
-          { src: cover, sizes: '256x256', type: imageType },
-          { src: cover, sizes: '384x384', type: imageType },
-          { src: cover, sizes: '512x512', type: imageType },
-        ],
+        // Leave sizes unspecified because Storage originals can have
+        // different dimensions. The OS fetches the real image URL.
+        artwork: [{ src: cover, type: imageType }],
       });
     }
 
