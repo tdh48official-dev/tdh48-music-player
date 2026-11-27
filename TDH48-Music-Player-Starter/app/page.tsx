@@ -1,4 +1,3 @@
-import { PlayerProvider } from '@/components/PlayerProvider';
 import PlayerBar from '@/components/PlayerBar';
 import MusicApp from '@/components/MusicApp';
 import MemberLogin from '@/components/MemberLogin';
@@ -12,7 +11,6 @@ export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Show the email-only member login before exposing the music library.
   if (!user) {
     return <MemberLogin />;
   }
@@ -51,10 +49,8 @@ export default async function Home() {
 
   return (
     <SessionActivityGuard>
-      <PlayerProvider>
-        <MusicApp initialTracks={tracks} initialPlayCounts={playCounts} />
-        <PlayerBar />
-      </PlayerProvider>
+      <MusicApp initialTracks={tracks} initialPlayCounts={playCounts} />
+      <PlayerBar />
     </SessionActivityGuard>
   );
 }
