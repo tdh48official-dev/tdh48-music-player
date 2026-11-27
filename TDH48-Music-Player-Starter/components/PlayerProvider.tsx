@@ -72,15 +72,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     return tracks;
   }, [supabase]);
 
-  // Preload a fallback queue so lock-screen skip controls also work when
-  // playback was started from a page that did not explicitly set a queue.
   useEffect(() => {
     void loadPublishedQueue();
   }, [loadPublishedQueue]);
 
-  const setQueue = useCallback((tracks: Track[]) => {
-    setQueueState(tracks);
-  }, []);
+  const setQueue = useCallback((tracks: Track[]) => setQueueState(tracks), []);
 
   const addToQueue = useCallback((item: Track) => {
     setQueueState((current) => current.some((t) => t.id === item.id) ? current : [...current, item]);
@@ -91,7 +87,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.current.play().catch(() => setPlaying(false));
       return;
     }
-
     setCurrentTime(0);
     setDuration(0);
     setTrack(newTrack);
@@ -101,7 +96,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const next = useCallback(async () => {
     const activeQueue = queue.length ? queue : await loadPublishedQueue();
     if (!activeQueue.length) return;
-
     const currentIndex = activeQueue.findIndex((item) => item.id === track?.id);
     const nextIndex = shuffle && activeQueue.length > 1
       ? (() => {
@@ -109,14 +103,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           return choices[Math.floor(Math.random() * choices.length)];
         })()
       : currentIndex < 0 ? 0 : currentIndex + 1;
-
     if (nextIndex >= activeQueue.length && repeatMode === 'off') {
       setPlaying(false);
       return;
     }
-
     setTrack(activeQueue[nextIndex >= activeQueue.length ? 0 : Math.max(0, nextIndex)]);
     setCurrentTime(0);
+    setDuration(0);
     setPlaying(true);
   }, [queue, track, repeatMode, shuffle, loadPublishedQueue]);
 
@@ -126,47 +119,37 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       if (audio.current) audio.current.currentTime = 0;
       return;
     }
-
     const currentIndex = activeQueue.findIndex((item) => item.id === track?.id);
-    const prevIndex = currentIndex < 0 || currentIndex === 0
-      ? activeQueue.length - 1
-      : currentIndex - 1;
-
+    const prevIndex = currentIndex < 0 || currentIndex === 0 ? activeQueue.length - 1 : currentIndex - 1;
     setTrack(activeQueue[prevIndex]);
     setCurrentTime(0);
+    setDuration(0);
     setPlaying(true);
   }, [queue, track, loadPublishedQueue]);
 
   const toggle = useCallback(() => {
     if (!audio.current || !track) return;
-
-    if (audio.current.paused) {
-      audio.current.play().catch(() => setPlaying(false));
-    } else {
-      audio.current.pause();
-    }
+    if (audio.current.paused) audio.current.play().catch(() => setPlaying(false));
+    else audio.current.pause();
   }, [track]);
 
   const setVolume = useCallback((value: number) => {
     const safeValue = Math.min(1, Math.max(0, value));
     setVolumeState(safeValue);
-
-    if (audio.current) {
-      audio.current.volume = safeValue;
-    }
+    if (audio.current) audio.current.volume = safeValue;
   }, []);
 
   const seek = useCallback((time: number) => {
-    if (!audio.current) return;
-
-    const safeTime = Math.max(0, Math.min(time, duration || 0));
-    audio.current.currentTime = safeTime;
+    const player = audio.current;
+    if (!player || !Number.isFinite(time)) return;
+    const maxTime = Number.isFinite(player.duration) ? player.duration : duration;
+    const safeTime = Math.max(0, Math.min(time, maxTime || 0));
+    player.currentTime = safeTime;
     setCurrentTime(safeTime);
   }, [duration]);
 
   useEffect(() => {
     if (!audio.current || !track) return;
-
     const player = audio.current;
     player.src = track.audio_url;
     player.volume = volume;
@@ -178,22 +161,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (audio.current) audio.current.volume = volume;
   }, [volume]);
 
-  // Serve a small, normalized JPEG to lock-screen clients. Native media
-  // controls often fail silently on large PNG originals and transformed URLs.
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !track) return;
-
     const session = navigator.mediaSession;
     const originalCover = track.cover_url?.trim()
       ? track.cover_url.trim()
       : new URL('/tdh48-logo.png', window.location.origin).toString();
-
     const artworkUrl = originalCover.includes('/storage/v1/object/public/tdh48-covers/')
       ? new URL('/api/lockscreen-artwork', window.location.origin)
       : new URL(originalCover, window.location.origin);
-    if (artworkUrl.pathname === '/api/lockscreen-artwork') {
-      artworkUrl.searchParams.set('url', originalCover);
-    }
+    if (artworkUrl.pathname === '/api/lockscreen-artwork') artworkUrl.searchParams.set('url', originalCover);
 
     if (typeof MediaMetadata !== 'undefined') {
       session.metadata = new MediaMetadata({
@@ -201,14 +178,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         artist: track.artist || 'TDH48',
         album: track.album || 'TDH48 Music',
         artwork: [
-          {
-            src: artworkUrl.toString(),
-            sizes: '512x512',
-            type: 'image/jpeg',
-          },
-          ...(artworkUrl.toString() !== originalCover
-            ? [{ src: originalCover, type: 'image/png' }]
-            : []),
+          { src: artworkUrl.toString(), sizes: '512x512', type: 'image/jpeg' },
+          ...(artworkUrl.toString() !== originalCover ? [{ src: originalCover, type: 'image/png' }] : []),
         ],
       });
     }
@@ -217,76 +188,65 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       try {
         session.setActionHandler(action, handler);
       } catch {
-        // Some browsers expose Media Session but do not support every action.
+        // Unsupported Media Session actions are ignored by the browser.
       }
     };
 
-    register('play', () => {
-      audio.current?.play().catch(() => setPlaying(false));
-    });
+    register('play', () => audio.current?.play().catch(() => setPlaying(false)));
     register('pause', () => audio.current?.pause());
-    // Explicitly clear time-skip actions so iOS/Android expose track-skip
-    // controls instead of the default +/- 10 second buttons.
-    register('seekbackward', null);
-    register('seekforward', null);
-    register('seekto', null);
     register('previoustrack', () => { void prev(); });
     register('nexttrack', () => { void next(); });
+
+    // Enable scrubbing on the lock-screen progress bar (iOS and Android).
+    register('seekto', (details) => {
+      const player = audio.current;
+      if (!player || details.seekTime === undefined || !Number.isFinite(details.seekTime)) return;
+      const maxTime = Number.isFinite(player.duration) ? player.duration : duration;
+      const target = Math.max(0, Math.min(details.seekTime, maxTime || 0));
+      if (details.fastSeek && typeof player.fastSeek === 'function') player.fastSeek(target);
+      else player.currentTime = target;
+      setCurrentTime(target);
+    });
+
+    // Do not expose +/- 10-second controls; use the timeline scrubber instead.
+    register('seekbackward', null);
+    register('seekforward', null);
 
     return () => {
       register('play', null);
       register('pause', null);
       register('previoustrack', null);
       register('nexttrack', null);
+      register('seekto', null);
       register('seekbackward', null);
       register('seekforward', null);
-      register('seekto', null);
     };
-  }, [track, prev, next]);
+  }, [track, prev, next, duration]);
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
-    navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
-
+    const session = navigator.mediaSession;
+    session.playbackState = playing ? 'playing' : 'paused';
     if (duration > 0 && Number.isFinite(duration)) {
       try {
-        navigator.mediaSession.setPositionState({
+        session.setPositionState({
           duration,
           playbackRate: audio.current?.playbackRate || 1,
-          position: Math.min(currentTime, duration),
+          position: Math.max(0, Math.min(currentTime, duration)),
         });
       } catch {
-        // Ignore unsupported or temporarily invalid position states.
+        // Position state may be unavailable before media metadata is ready.
       }
     }
   }, [playing, currentTime, duration, track]);
 
   return (
-    <PlayerContext.Provider
-      value={{
-        track,
-        playing,
-        queue,
-        volume,
-        currentTime,
-        duration,
-        audio,
-        play,
-        toggle,
-        next,
-        prev,
-        setQueue,
-        addToQueue,
-        setVolume,
-        seek,
-        repeatMode,
-        setRepeatMode,
-        shuffle,
-        setShuffle,
-      }}
-    >
+    <PlayerContext.Provider value={{
+      track, playing, queue, volume, currentTime, duration, audio,
+      play, toggle, next, prev, setQueue, addToQueue, setVolume, seek,
+      repeatMode, setRepeatMode, shuffle, setShuffle,
+    }}>
       {children}
-
       <audio
         ref={audio}
         preload="metadata"
@@ -321,10 +281,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
 export function usePlayer() {
   const context = useContext(PlayerContext);
-
-  if (!context) {
-    throw new Error('PlayerProvider missing');
-  }
-
+  if (!context) throw new Error('PlayerProvider missing');
   return context;
 }
