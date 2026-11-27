@@ -2,26 +2,21 @@ import {notFound} from 'next/navigation';
 import {createClient} from '@/lib/supabase/server';
 import type {Track} from '@/lib/types';
 import AlbumDetail from '@/components/AlbumDetail';
-import {PlayerProvider} from '@/components/PlayerProvider';
-import PlayerBar from '@/components/PlayerBar';
-import SessionActivityGuard from '@/components/SessionActivityGuard';
 
 export const dynamic='force-dynamic';
 
 export default async function AlbumPage({params}:{params:Promise<{albumName:string}>}) {
-  // Next.js already decodes dynamic route params; do not decode a second time.
+  // Next.js supplies decoded route params; decodeURIComponent here would double-decode.
   const {albumName}=await params;
   const requestedAlbum=albumName.trim();
   if(!requestedAlbum) notFound();
 
   const supabase=await createClient();
-  const {data:{user}}=await supabase.auth.getUser();
-  if(!user) {
+  const {data:{user},error:authError}=await supabase.auth.getUser();
+  if(authError || !user) {
     return <main className="min-h-screen bg-[#fff7fb] p-8 text-center text-[#70485e]"><a href="/">กรุณาเข้าสู่ระบบเพื่อฟังเพลง</a></main>;
   }
 
-  // Match the same trimmed album names used by the album cards on the home page.
-  // The fallback also handles older records whose album field contains extra spaces.
   const {data,error}=await supabase
     .from('tracks')
     .select('*')
@@ -49,12 +44,8 @@ export default async function AlbumPage({params}:{params:Promise<{albumName:stri
   }
 
   if(!tracks.length) notFound();
-  return (
-    <SessionActivityGuard>
-      <PlayerProvider>
-        <AlbumDetail albumName={requestedAlbum} tracks={tracks}/>
-        <PlayerBar/>
-      </PlayerProvider>
-    </SessionActivityGuard>
-  );
+
+  // AppShell already provides the shared PlayerProvider and sticky PlayerBar.
+  // Reuse that single context so album selections, playback, and lyrics stay in sync.
+  return <AlbumDetail albumName={requestedAlbum} tracks={tracks}/>;
 }
