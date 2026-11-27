@@ -53,6 +53,31 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
   const [shuffle, setShuffle] = useState(false);
 
+  const loadPublishedQueue = useCallback(async (): Promise<Track[]> => {
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*')
+      .eq('published', true)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.warn('Could not load fallback playback queue:', error.message);
+      return [];
+    }
+
+    const tracks = (data ?? []) as Track[];
+    if (tracks.length) {
+      setQueueState((current) => current.length ? current : tracks);
+    }
+    return tracks;
+  }, [supabase]);
+
+  // Preload a fallback queue so lock-screen skip controls also work when
+  // playback was started from a page that did not explicitly set a queue.
+  useEffect(() => {
+    void loadPublishedQueue();
+  }, [loadPublishedQueue]);
+
   const setQueue = useCallback((tracks: Track[]) => {
     setQueueState(tracks);
   }, []);
@@ -73,50 +98,50 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setPlaying(true);
   }, [track]);
 
-  const next = useCallback(() => {
-    if (!queue.length) return;
+  const next = useCallback(async () => {
+    const activeQueue = queue.length ? queue : await loadPublishedQueue();
+    if (!activeQueue.length) return;
 
-    const currentIndex = queue.findIndex(
-      (item) => item.id === track?.id
-    );
+    const currentIndex = activeQueue.findIndex((item) => item.id === track?.id);
+    const nextIndex = shuffle && activeQueue.length > 1
+      ? (() => {
+          const choices = activeQueue.map((_, index) => index).filter((index) => index !== currentIndex);
+          return choices[Math.floor(Math.random() * choices.length)];
+        })()
+      : currentIndex < 0 ? 0 : currentIndex + 1;
 
-    const nextIndex = shuffle && queue.length > 1
-      ? (() => { const choices = queue.map((_, index) => index).filter(index => index !== currentIndex); return choices[Math.floor(Math.random() * choices.length)]; })()
-      : currentIndex + 1;
-    if (nextIndex >= queue.length && repeatMode === 'off') {
+    if (nextIndex >= activeQueue.length && repeatMode === 'off') {
       setPlaying(false);
       return;
     }
-    setTrack(queue[nextIndex >= queue.length ? 0 : Math.max(0, nextIndex)]);
+
+    setTrack(activeQueue[nextIndex >= activeQueue.length ? 0 : Math.max(0, nextIndex)]);
     setCurrentTime(0);
     setPlaying(true);
-  }, [queue, track, repeatMode, shuffle]);
+  }, [queue, track, repeatMode, shuffle, loadPublishedQueue]);
 
-  const prev = useCallback(() => {
-    if (!audio.current) return;
-
-    if (audio.current.currentTime > 3) {
+  const prev = useCallback(async () => {
+    if (audio.current && audio.current.currentTime > 3) {
       audio.current.currentTime = 0;
       setCurrentTime(0);
       return;
     }
 
-    if (!queue.length) {
-      audio.current.currentTime = 0;
+    const activeQueue = queue.length ? queue : await loadPublishedQueue();
+    if (!activeQueue.length) {
+      if (audio.current) audio.current.currentTime = 0;
       return;
     }
 
-    const currentIndex = queue.findIndex(
-      (item) => item.id === track?.id
-    );
+    const currentIndex = activeQueue.findIndex((item) => item.id === track?.id);
+    const prevIndex = currentIndex < 0 || currentIndex === 0
+      ? activeQueue.length - 1
+      : currentIndex - 1;
 
-    const prevIndex =
-      currentIndex <= 0 ? queue.length - 1 : currentIndex - 1;
-
-    setTrack(queue[prevIndex]);
+    setTrack(activeQueue[prevIndex]);
     setCurrentTime(0);
     setPlaying(true);
-  }, [queue, track]);
+  }, [queue, track, loadPublishedQueue]);
 
   const toggle = useCallback(() => {
     if (!audio.current || !track) return;
@@ -152,18 +177,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     player.src = track.audio_url;
     player.volume = volume;
     player.load();
-
     player.play().catch(() => setPlaying(false));
   }, [track]);
 
   useEffect(() => {
-    if (audio.current) {
-      audio.current.volume = volume;
-    }
+    if (audio.current) audio.current.volume = volume;
   }, [volume]);
 
-  // Publish the current track to the device's native lock-screen / media controls.
-  // Supported by modern Android browsers and Safari on supported iOS versions.
+  // Publish compact, correctly typed artwork and metadata to lock-screen controls.
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !track) return;
 
@@ -172,26 +193,44 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       ? track.cover_url.trim()
       : new URL('/tdh48-logo.png', window.location.origin).toString();
 
-    // Infer the actual file format from the URL path (not a malformed regex
-    // against the full URL). Do not claim multiple pixel sizes for one file.
     let imageType = 'image/png';
+    let optimizedCover = cover;
+
     try {
-      const pathname = new URL(cover, window.location.origin).pathname.toLowerCase();
+      const coverUrl = new URL(cover, window.location.origin);
+      const pathname = coverUrl.pathname.toLowerCase();
       if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) imageType = 'image/jpeg';
       else if (pathname.endsWith('.webp')) imageType = 'image/webp';
-      else if (pathname.endsWith('.png')) imageType = 'image/png';
+
+      // Supabase Storage can deliver a 512px rendition instead of the
+      // multi-megabyte original. Keep the original as a fallback candidate.
+      if (coverUrl.pathname.includes('/storage/v1/object/public/')) {
+        coverUrl.pathname = coverUrl.pathname.replace(
+          '/storage/v1/object/public/',
+          '/storage/v1/render/image/public/',
+        );
+        coverUrl.searchParams.set('width', '512');
+        coverUrl.searchParams.set('height', '512');
+        coverUrl.searchParams.set('resize', 'cover');
+        coverUrl.searchParams.set('quality', '80');
+        coverUrl.searchParams.set('format', 'origin');
+        optimizedCover = coverUrl.toString();
+      }
     } catch {
-      imageType = 'image/png';
+      // Keep the original URL if it cannot be parsed.
     }
 
     if (typeof MediaMetadata !== 'undefined') {
+      const artwork: MediaImage[] = [
+        { src: optimizedCover, sizes: '512x512', type: imageType },
+      ];
+      if (optimizedCover !== cover) artwork.push({ src: cover, type: imageType });
+
       session.metadata = new MediaMetadata({
         title: track.title || 'TDH48 Music',
         artist: track.artist || 'TDH48',
         album: track.album || 'TDH48 Music',
-        // Leave sizes unspecified because Storage originals can have
-        // different dimensions. The OS fetches the real image URL.
-        artwork: [{ src: cover, type: imageType }],
+        artwork,
       });
     }
 
@@ -207,8 +246,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.current?.play().catch(() => setPlaying(false));
     });
     register('pause', () => audio.current?.pause());
-    register('previoustrack', prev);
-    register('nexttrack', next);
+    register('previoustrack', () => { void prev(); });
+    register('nexttrack', () => { void next(); });
     register('seekbackward', (details) => {
       if (audio.current) audio.current.currentTime = Math.max(0, audio.current.currentTime - (details.seekOffset ?? 10));
     });
@@ -217,9 +256,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     });
     register('seekto', (details) => {
       if (audio.current && details.seekTime !== undefined) {
-        audio.current.currentTime = details.seekTime;
         if (details.fastSeek && 'fastSeek' in audio.current) {
           audio.current.fastSeek(details.seekTime);
+        } else {
+          audio.current.currentTime = details.seekTime;
         }
       }
     });
@@ -281,15 +321,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       <audio
         ref={audio}
         preload="metadata"
-        onTimeUpdate={(e) =>
-          setCurrentTime(e.currentTarget.currentTime)
-        }
-        onLoadedMetadata={(e) =>
-          setDuration(e.currentTarget.duration || 0)
-        }
-        onDurationChange={(e) =>
-          setDuration(e.currentTarget.duration || 0)
-        }
+        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
+        onDurationChange={(e) => setDuration(e.currentTarget.duration || 0)}
         onPlay={async () => {
           setPlaying(true);
           if (track && countedTrackRef.current !== track.id) {
@@ -309,7 +343,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
             audio.current.play().catch(() => setPlaying(false));
             return;
           }
-          next();
+          void next();
         }}
       />
     </PlayerContext.Provider>
