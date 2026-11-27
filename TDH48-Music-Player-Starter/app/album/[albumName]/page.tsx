@@ -2,6 +2,9 @@ import {notFound} from 'next/navigation';
 import {createClient} from '@/lib/supabase/server';
 import type {Track} from '@/lib/types';
 import AlbumDetail from '@/components/AlbumDetail';
+import {PlayerProvider} from '@/components/PlayerProvider';
+import PlayerBar from '@/components/PlayerBar';
+import SessionActivityGuard from '@/components/SessionActivityGuard';
 
 export const dynamic='force-dynamic';
 
@@ -46,5 +49,12 @@ export default async function AlbumPage({params}:{params:Promise<{albumName:stri
   }
 
   if(!tracks.length) notFound();
-  return <AlbumDetail albumName={requestedAlbum} tracks={tracks}/>;
+  return (
+    <SessionActivityGuard>
+      <PlayerProvider>
+        <AlbumDetail albumName={requestedAlbum} tracks={tracks}/>
+        <PlayerBar/>
+      </PlayerProvider>
+    </SessionActivityGuard>
+  );
 }
