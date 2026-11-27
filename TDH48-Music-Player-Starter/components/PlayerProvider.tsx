@@ -121,12 +121,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, [queue, track, repeatMode, shuffle, loadPublishedQueue]);
 
   const prev = useCallback(async () => {
-    if (audio.current && audio.current.currentTime > 3) {
-      audio.current.currentTime = 0;
-      setCurrentTime(0);
-      return;
-    }
-
     const activeQueue = queue.length ? queue : await loadPublishedQueue();
     if (!activeQueue.length) {
       if (audio.current) audio.current.currentTime = 0;
@@ -206,11 +200,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         title: track.title || 'TDH48 Music',
         artist: track.artist || 'TDH48',
         album: track.album || 'TDH48 Music',
-        artwork: [{
-          src: artworkUrl.toString(),
-          sizes: '512x512',
-          type: 'image/jpeg',
-        }],
+        artwork: [
+          {
+            src: artworkUrl.toString(),
+            sizes: '512x512',
+            type: 'image/jpeg',
+          },
+          ...(artworkUrl.toString() !== originalCover
+            ? [{ src: originalCover, type: 'image/png' }]
+            : []),
+        ],
       });
     }
 
@@ -226,23 +225,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.current?.play().catch(() => setPlaying(false));
     });
     register('pause', () => audio.current?.pause());
+    // Explicitly clear time-skip actions so iOS/Android expose track-skip
+    // controls instead of the default +/- 10 second buttons.
+    register('seekbackward', null);
+    register('seekforward', null);
+    register('seekto', null);
     register('previoustrack', () => { void prev(); });
     register('nexttrack', () => { void next(); });
-    register('seekto', (details) => {
-      if (audio.current && details.seekTime !== undefined) {
-        if (details.fastSeek && 'fastSeek' in audio.current) {
-          audio.current.fastSeek(details.seekTime);
-        } else {
-          audio.current.currentTime = details.seekTime;
-        }
-      }
-    });
 
     return () => {
       register('play', null);
       register('pause', null);
       register('previoustrack', null);
       register('nexttrack', null);
+      register('seekbackward', null);
+      register('seekforward', null);
       register('seekto', null);
     };
   }, [track, prev, next]);
