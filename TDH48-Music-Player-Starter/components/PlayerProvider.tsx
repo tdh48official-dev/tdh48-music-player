@@ -184,53 +184,33 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (audio.current) audio.current.volume = volume;
   }, [volume]);
 
-  // Publish compact, correctly typed artwork and metadata to lock-screen controls.
+  // Serve a small, normalized JPEG to lock-screen clients. Native media
+  // controls often fail silently on large PNG originals and transformed URLs.
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !track) return;
 
     const session = navigator.mediaSession;
-    const cover = track.cover_url?.trim()
+    const originalCover = track.cover_url?.trim()
       ? track.cover_url.trim()
       : new URL('/tdh48-logo.png', window.location.origin).toString();
 
-    let imageType = 'image/png';
-    let optimizedCover = cover;
-
-    try {
-      const coverUrl = new URL(cover, window.location.origin);
-      const pathname = coverUrl.pathname.toLowerCase();
-      if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) imageType = 'image/jpeg';
-      else if (pathname.endsWith('.webp')) imageType = 'image/webp';
-
-      // Supabase Storage can deliver a 512px rendition instead of the
-      // multi-megabyte original. Keep the original as a fallback candidate.
-      if (coverUrl.pathname.includes('/storage/v1/object/public/')) {
-        coverUrl.pathname = coverUrl.pathname.replace(
-          '/storage/v1/object/public/',
-          '/storage/v1/render/image/public/',
-        );
-        coverUrl.searchParams.set('width', '512');
-        coverUrl.searchParams.set('height', '512');
-        coverUrl.searchParams.set('resize', 'cover');
-        coverUrl.searchParams.set('quality', '80');
-        coverUrl.searchParams.set('format', 'origin');
-        optimizedCover = coverUrl.toString();
-      }
-    } catch {
-      // Keep the original URL if it cannot be parsed.
+    const artworkUrl = originalCover.includes('/storage/v1/object/public/tdh48-covers/')
+      ? new URL('/api/lockscreen-artwork', window.location.origin)
+      : new URL(originalCover, window.location.origin);
+    if (artworkUrl.pathname === '/api/lockscreen-artwork') {
+      artworkUrl.searchParams.set('url', originalCover);
     }
 
     if (typeof MediaMetadata !== 'undefined') {
-      const artwork: MediaImage[] = [
-        { src: optimizedCover, sizes: '512x512', type: imageType },
-      ];
-      if (optimizedCover !== cover) artwork.push({ src: cover, type: imageType });
-
       session.metadata = new MediaMetadata({
         title: track.title || 'TDH48 Music',
         artist: track.artist || 'TDH48',
         album: track.album || 'TDH48 Music',
-        artwork,
+        artwork: [{
+          src: artworkUrl.toString(),
+          sizes: '512x512',
+          type: 'image/jpeg',
+        }],
       });
     }
 
@@ -248,12 +228,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     register('pause', () => audio.current?.pause());
     register('previoustrack', () => { void prev(); });
     register('nexttrack', () => { void next(); });
-    register('seekbackward', (details) => {
-      if (audio.current) audio.current.currentTime = Math.max(0, audio.current.currentTime - (details.seekOffset ?? 10));
-    });
-    register('seekforward', (details) => {
-      if (audio.current) audio.current.currentTime = Math.min(audio.current.duration || Infinity, audio.current.currentTime + (details.seekOffset ?? 10));
-    });
     register('seekto', (details) => {
       if (audio.current && details.seekTime !== undefined) {
         if (details.fastSeek && 'fastSeek' in audio.current) {
@@ -269,8 +243,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       register('pause', null);
       register('previoustrack', null);
       register('nexttrack', null);
-      register('seekbackward', null);
-      register('seekforward', null);
       register('seekto', null);
     };
   }, [track, prev, next]);
