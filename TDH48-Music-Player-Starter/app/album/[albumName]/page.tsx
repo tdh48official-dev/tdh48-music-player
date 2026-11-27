@@ -9,9 +9,14 @@ import SessionActivityGuard from '@/components/SessionActivityGuard';
 export const dynamic='force-dynamic';
 
 export default async function AlbumPage({params}:{params:Promise<{albumName:string}>}) {
-  // Next.js supplies decoded route params; decodeURIComponent here would double-decode.
-  const {albumName}=await params;
-  const requestedAlbum=albumName.trim();
+  // Album links encode the full album title. Decode the route segment before querying Supabase.
+  const {albumName:rawAlbumName}=await params;
+  let requestedAlbum: string;
+  try {
+    requestedAlbum=decodeURIComponent(rawAlbumName).trim();
+  } catch {
+    requestedAlbum=rawAlbumName.trim();
+  }
   if(!requestedAlbum) notFound();
 
   const supabase=await createClient();
