@@ -5,16 +5,19 @@ This folder is an isolated Capacitor Android wrapper. It does not modify the Nex
 - App name: TDH48 Music Player
 - Android application ID: `com.tdh48.musicplayer`
 - Web origin: `https://tdh48-music-player-official.vercel.app`
-- Capacitor major: 7
+- Capacitor major: 8
 
-## Prerequisites
+## Automated Android build
 
-- Node.js 20+
+A GitHub Actions workflow is provided at `.github/workflows/android-build.yml`. Run it manually from the Actions tab on branch `feature/android-play-store`. It creates the native Android project in the runner and uploads build artifacts.
+
+The first CI build is for validation only. A release AAB without a configured signing key is not ready for Google Play upload.
+
+## Local prerequisites
+
+- Node.js 22+
 - Android Studio with Android SDK
-- JDK 21 (use the version supported by the installed Android Gradle Plugin)
-- A Google Play Console developer account before store submission
-
-## Create the native Android project
+- JDK 21
 
 From this directory:
 
@@ -24,8 +27,6 @@ npm run android:add
 npm run android:sync
 npm run android:open
 ```
-
-The generated `android/` directory contains the native Gradle project. Build a signed Android App Bundle (.aab) from Android Studio after configuring the release signing key.
 
 ## Important release work still required
 
