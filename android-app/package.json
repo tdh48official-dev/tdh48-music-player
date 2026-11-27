@@ -1,0 +1,23 @@
+{
+  "name": "tdh48-music-player-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android wrapper project for TDH48 Music Player",
+  "scripts": {
+    "android:add": "cap add android",
+    "android:sync": "cap sync android",
+    "android:open": "cap open android",
+    "android:run": "cap run android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.0.2",
+    "@capacitor/keyboard": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.3",
+    "@capacitor/splash-screen": "^7.0.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}
