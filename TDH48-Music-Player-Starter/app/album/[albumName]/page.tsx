@@ -2,6 +2,9 @@ import {notFound} from 'next/navigation';
 import {createClient} from '@/lib/supabase/server';
 import type {Track} from '@/lib/types';
 import AlbumDetail from '@/components/AlbumDetail';
+import {PlayerProvider} from '@/components/PlayerProvider';
+import PlayerBar from '@/components/PlayerBar';
+import SessionActivityGuard from '@/components/SessionActivityGuard';
 
 export const dynamic='force-dynamic';
 
@@ -45,7 +48,13 @@ export default async function AlbumPage({params}:{params:Promise<{albumName:stri
 
   if(!tracks.length) notFound();
 
-  // AppShell already provides the shared PlayerProvider and sticky PlayerBar.
-  // Reuse that single context so album selections, playback, and lyrics stay in sync.
-  return <AlbumDetail albumName={requestedAlbum} tracks={tracks}/>;
+  // The root layout does not mount AppShell, so this route must provide its own player context.
+  return (
+    <SessionActivityGuard>
+      <PlayerProvider>
+        <AlbumDetail albumName={requestedAlbum} tracks={tracks}/>
+        <PlayerBar/>
+      </PlayerProvider>
+    </SessionActivityGuard>
+  );
 }
