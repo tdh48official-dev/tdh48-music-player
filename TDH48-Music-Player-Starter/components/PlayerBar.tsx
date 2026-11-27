@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   ChevronDown,
   Maximize2,
@@ -59,13 +59,9 @@ export default function PlayerBar() {
 
   const [expanded, setExpanded] = useState(false);
   const [showLyrics, setShowLyrics] = useState(true);
-  const activeLyricRef = useRef<HTMLParagraphElement | null>(null);
   const cycleRepeat = () => setRepeatMode(repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off');
   const timedLyrics = parseLyrics(track?.lyrics);
   const activeLyricIndex = timedLyrics.reduce((active, line, index) => line.time <= currentTime ? index : active, -1);
-  useEffect(() => {
-    if (expanded && showLyrics && activeLyricRef.current) activeLyricRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [expanded, showLyrics, activeLyricIndex, track?.id]);
 
   if (!track) return null;
 
@@ -166,7 +162,7 @@ export default function PlayerBar() {
                     ) : timedLyrics.length ? (
                       <div className="flex min-h-full flex-col items-center gap-5 py-[45%] text-center">
                         {timedLyrics.map((line, index) => (
-                          <p ref={index === activeLyricIndex ? activeLyricRef : null} key={index} className={`w-full whitespace-pre-wrap break-words text-base leading-7 transition-all duration-500 sm:text-lg ${index === activeLyricIndex ? 'scale-[1.03] font-bold text-[#c02d79]' : 'text-[#e6a6c7]'}`}>{line.text || '♪'}</p>
+                          <p key={index} className={`w-full whitespace-pre-wrap break-words text-base leading-7 transition-all duration-500 sm:text-lg ${index === activeLyricIndex ? 'scale-[1.03] font-bold text-[#c02d79]' : 'text-[#e6a6c7]'}`}>{line.text || '♪'}</p>
                         ))}
                       </div>
                     ) : (
