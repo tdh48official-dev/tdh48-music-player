@@ -8,6 +8,7 @@ import type { Track } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import OfficialPlaylistsAdmin from '@/components/OfficialPlaylistsAdmin';
 import LyricsTimestampEditor from '@/components/LyricsTimestampEditor';
+import LiveStreamAdmin from '@/components/LiveStreamAdmin';
 
 import {
   Upload,
@@ -842,6 +843,8 @@ export default function Admin() {
             }}
           />
         )}
+
+        <LiveStreamAdmin />
 
         <OfficialPlaylistsAdmin />
       </div>

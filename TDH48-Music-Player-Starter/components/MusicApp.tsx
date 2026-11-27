@@ -30,6 +30,7 @@ export default function MusicApp({initialTracks,initialPlayCounts}:{initialTrack
      <a href="#library" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Library size={17}/> คลังเพลง</a>
      <a href="#favorites" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Heart size={17}/> เพลงที่ถูกใจ</a>
      <a href="#recent" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Clock3 size={17}/> ประวัติการฟัง</a>
+     <a href="/live" className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-[#fff0f6]"><Headphones size={17}/> LIVE STREAMING</a>
      <button onClick={()=>setShowQueue(!showQueue)} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left hover:bg-[#fff0f6]"><AudioLines size={17}/> คิวเพลง</button>
     </nav>
     <div className="mt-auto rounded-2xl bg-gradient-to-br from-[#ffe4ef] to-[#fff4f8] p-4"><div className="mb-2 text-2xl">🎀</div><b className="text-sm">TDH48 Music</b><p className="mt-1 text-xs leading-5 text-[#a57991]">พื้นที่รวมเพลงและเสียงดนตรีที่คุณชื่นชอบ</p></div>
