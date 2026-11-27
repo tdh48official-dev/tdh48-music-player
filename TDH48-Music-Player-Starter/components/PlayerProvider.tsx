@@ -162,6 +162,90 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   }, [volume]);
 
+  // Publish the current track to the device's native lock-screen / media controls.
+  // Supported by modern Android browsers and Safari on supported iOS versions.
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !track) return;
+
+    const session = navigator.mediaSession;
+    const cover = track.cover_url
+      ? track.cover_url
+      : new URL('/tdh48-logo.png', window.location.origin).toString();
+    const imageType = /\\.png(?:[?#]|$)/i.test(cover) ? 'image/png' : 'image/jpeg';
+
+    if (typeof MediaMetadata !== 'undefined') {
+      session.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.artist || 'TDH48',
+        album: track.album || 'TDH48 Music',
+        artwork: [
+          { src: cover, sizes: '96x96', type: imageType },
+          { src: cover, sizes: '128x128', type: imageType },
+          { src: cover, sizes: '192x192', type: imageType },
+          { src: cover, sizes: '256x256', type: imageType },
+          { src: cover, sizes: '384x384', type: imageType },
+          { src: cover, sizes: '512x512', type: imageType },
+        ],
+      });
+    }
+
+    const register = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try {
+        session.setActionHandler(action, handler);
+      } catch {
+        // Some browsers expose Media Session but do not support every action.
+      }
+    };
+
+    register('play', () => {
+      audio.current?.play().catch(() => setPlaying(false));
+    });
+    register('pause', () => audio.current?.pause());
+    register('previoustrack', prev);
+    register('nexttrack', next);
+    register('seekbackward', (details) => {
+      if (audio.current) audio.current.currentTime = Math.max(0, audio.current.currentTime - (details.seekOffset ?? 10));
+    });
+    register('seekforward', (details) => {
+      if (audio.current) audio.current.currentTime = Math.min(audio.current.duration || Infinity, audio.current.currentTime + (details.seekOffset ?? 10));
+    });
+    register('seekto', (details) => {
+      if (audio.current && details.seekTime !== undefined) {
+        audio.current.currentTime = details.seekTime;
+        if (details.fastSeek && 'fastSeek' in audio.current) {
+          audio.current.fastSeek(details.seekTime);
+        }
+      }
+    });
+
+    return () => {
+      register('play', null);
+      register('pause', null);
+      register('previoustrack', null);
+      register('nexttrack', null);
+      register('seekbackward', null);
+      register('seekforward', null);
+      register('seekto', null);
+    };
+  }, [track, prev, next]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+
+    if (duration > 0 && Number.isFinite(duration)) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration,
+          playbackRate: audio.current?.playbackRate || 1,
+          position: Math.min(currentTime, duration),
+        });
+      } catch {
+        // Ignore unsupported or temporarily invalid position states.
+      }
+    }
+  }, [playing, currentTime, duration, track]);
+
   return (
     <PlayerContext.Provider
       value={{
