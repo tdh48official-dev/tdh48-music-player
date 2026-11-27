@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ChevronDown,
   Maximize2,
@@ -59,9 +59,23 @@ export default function PlayerBar() {
 
   const [expanded, setExpanded] = useState(false);
   const [showLyrics, setShowLyrics] = useState(true);
+  const lyricsContainerRef = useRef<HTMLDivElement | null>(null);
+  const activeLyricRef = useRef<HTMLParagraphElement | null>(null);
   const cycleRepeat = () => setRepeatMode(repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off');
   const timedLyrics = parseLyrics(track?.lyrics);
   const activeLyricIndex = timedLyrics.reduce((active, line, index) => line.time <= currentTime ? index : active, -1);
+
+  useEffect(() => {
+    const container = lyricsContainerRef.current;
+    const activeLine = activeLyricRef.current;
+    if (!expanded || !showLyrics || !container || !activeLine) return;
+
+    // Scroll only the lyrics pane, never the document/page.
+    const containerRect = container.getBoundingClientRect();
+    const lineRect = activeLine.getBoundingClientRect();
+    const targetTop = container.scrollTop + (lineRect.top - containerRect.top) - (container.clientHeight - activeLine.offsetHeight) / 2;
+    container.scrollTo({ top: targetTop, behavior: 'smooth' });
+  }, [expanded, showLyrics, activeLyricIndex, track?.id]);
 
   if (!track) return null;
 
@@ -156,13 +170,13 @@ export default function PlayerBar() {
               {showLyrics && (
                 <section className="relative flex h-auto min-h-[25vh] max-h-[28vh] flex-col overflow-hidden rounded-3xl border border-pink-200/50 bg-white/55 px-4 pb-16 pt-5 shadow-sm md:h-full md:min-h-0 md:max-h-none" aria-label="เนื้อเพลง Now Playing">
                   <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-[#c45d8d]/65">เนื้อเพลง</p>
-                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth px-2 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]">
+                  <div ref={lyricsContainerRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth px-2 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]">
                     {!track.lyrics?.trim() ? (
                       <div className="flex h-full min-h-40 items-center justify-center text-center text-sm text-[#a34f78]/70">ยังไม่มีเนื้อเพลงสำหรับเพลงนี้</div>
                     ) : timedLyrics.length ? (
                       <div className="flex min-h-full flex-col items-center gap-5 py-[45%] text-center">
                         {timedLyrics.map((line, index) => (
-                          <p key={index} className={`w-full whitespace-pre-wrap break-words text-base leading-7 transition-all duration-500 sm:text-lg ${index === activeLyricIndex ? 'scale-[1.03] font-bold text-[#c02d79]' : 'text-[#e6a6c7]'}`}>{line.text || '♪'}</p>
+                          <p ref={index === activeLyricIndex ? activeLyricRef : null} key={index} className={`w-full whitespace-pre-wrap break-words text-base leading-7 transition-all duration-500 sm:text-lg ${index === activeLyricIndex ? 'scale-[1.03] font-bold text-[#c02d79]' : 'text-[#e6a6c7]'}`}>{line.text || '♪'}</p>
                         ))}
                       </div>
                     ) : (
